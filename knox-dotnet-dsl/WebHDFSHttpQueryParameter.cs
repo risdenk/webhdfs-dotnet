@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text.RegularExpressions;
 
@@ -19,6 +18,7 @@ namespace knoxdotnetdsl
 
             // PUT
             public static readonly Op CREATE = new Op("CREATE");
+            public static readonly Op MKDIRS = new Op("MKDIRS");
 
             private Op(string value)
             {
@@ -128,8 +128,61 @@ namespace knoxdotnetdsl
                 else
                 {
                     throw new ArgumentException(
-                        "Buffersize must be greater than 0" +
+                        "Buffersize must be greater than 0. " +
                         "See https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Buffer_Size"
+                    );
+                }
+            }
+            return query;
+        }
+
+        /// <summary>
+        /// Sets the offset parameter on the query.
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Offset
+        /// </summary>
+        /// <returns>The query.</returns>
+        /// <param name="query">Query.</param>
+        /// <param name="offset">Offset.</param>
+        public static NameValueCollection setOffset(NameValueCollection query, Nullable<long> offset)
+        {
+            if ( offset == null) 
+            {
+                query.Set("offset", "null");
+            } 
+            else if (offset >= 0) 
+            {
+                query.Set("offset", offset.ToString());
+            } 
+            else 
+            {
+                throw new ArgumentException(
+                    "Offset must be greater than or equal to 0 or null. " +
+                    "See https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Offset"
+                );
+            }
+            return query;
+        }
+
+        /// <summary>
+        /// Sets the length parameter on the query.
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Length
+        /// </summary>
+        /// <returns>The query.</returns>
+        /// <param name="query">Query.</param>
+        /// <param name="offset">Length.</param>
+        public static NameValueCollection setLength(NameValueCollection query, Nullable<long> length)
+        {
+            if (length != null)
+            {
+                if (length >= 0)
+                {
+                    query.Set("length", length.ToString());
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        "Length must be greater than or equal to 0. " +
+                        "See https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Offset"
                     );
                 }
             }

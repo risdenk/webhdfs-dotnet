@@ -2,7 +2,6 @@
 using System;
 using knoxdotnetdsl;
 using System.Collections.Specialized;
-using NUnit.Framework.Constraints;
 
 namespace knoxdotnetdsltests
 {
@@ -98,7 +97,51 @@ namespace knoxdotnetdsltests
             WebHDFSHttpQueryParameter.setBuffersize(query, 100);
             Assert.AreEqual("100", query["buffersize"]);
 
+            Assert.Throws<ArgumentException>(() => { WebHDFSHttpQueryParameter.setBuffersize(query, 0); });
             Assert.Throws<ArgumentException>(() => { WebHDFSHttpQueryParameter.setBuffersize(query, -1); });
+        }
+
+        [Test()]
+        public void TestOffset()
+        {
+            var query = getEmptyQuery();
+            WebHDFSHttpQueryParameter.setOffset(query, null);
+            Assert.AreEqual("null", query["offset"]);
+
+            query = getEmptyQuery();
+            WebHDFSHttpQueryParameter.setOffset(query, 0);
+            Assert.AreEqual("0", query["offset"]);
+
+            query = getEmptyQuery();
+            WebHDFSHttpQueryParameter.setOffset(query, 1);
+            Assert.AreEqual("1", query["offset"]);
+
+            query = getEmptyQuery();
+            WebHDFSHttpQueryParameter.setOffset(query, 100);
+            Assert.AreEqual("100", query["offset"]);
+
+            Assert.Throws<ArgumentException>(() => { WebHDFSHttpQueryParameter.setOffset(query, -1); });
+        }
+
+        [Test()]
+        public void TestLength()
+        {
+            var query = getEmptyQuery();
+            Assert.AreEqual(query, WebHDFSHttpQueryParameter.setLength(query, null));
+
+            query = getEmptyQuery();
+            WebHDFSHttpQueryParameter.setLength(query, 0);
+            Assert.AreEqual("0", query["length"]);
+
+            query = getEmptyQuery();
+            WebHDFSHttpQueryParameter.setLength(query, 1);
+            Assert.AreEqual("1", query["length"]);
+
+            query = getEmptyQuery();
+            WebHDFSHttpQueryParameter.setLength(query, 100);
+            Assert.AreEqual("100", query["length"]);
+
+            Assert.Throws<ArgumentException>(() => { WebHDFSHttpQueryParameter.setLength(query, -1); });
         }
     }
 
