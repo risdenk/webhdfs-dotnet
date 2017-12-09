@@ -15,10 +15,42 @@ namespace knoxdotnetdsl
             public static readonly Op OPEN = new Op("OPEN");
             public static readonly Op GETFILESTATUS = new Op("GETFILESTATUS");
             public static readonly Op LISTSTATUS = new Op("LISTSTATUS");
+            public static readonly Op GETCONTENTSUMMARY = new Op("GETCONTENTSUMMARY");
+            public static readonly Op GETFILECHECKSUM = new Op("GETFILECHECKSUM");
+            public static readonly Op GETHOMEDIRECTORY = new Op("GETHOMEDIRECTORY");
+            public static readonly Op GETDELEGATIONTOKEN = new Op("GETDELEGATIONTOKEN");
+            public static readonly Op GETXATTRS = new Op("GETXATTRS");
+            public static readonly Op LISTXATTRS = new Op("LISTXATTRS");
+            public static readonly Op CHECKACCESS = new Op("CHECKACCESS");
+            public static readonly Op GETALLSTORAGEPOLICY = new Op("GETALLSTORAGEPOLICY");
+            public static readonly Op GETSTORAGEPOLICY = new Op("GETSTORAGEPOLICY");
 
             // PUT
             public static readonly Op CREATE = new Op("CREATE");
             public static readonly Op MKDIRS = new Op("MKDIRS");
+            public static readonly Op CREATESYMLINK = new Op("CREATESYMLINK");
+            public static readonly Op RENAME = new Op("RENAME");
+            public static readonly Op SETREPLICATION = new Op("SETREPLICATION");
+            public static readonly Op SETOWNER = new Op("SETOWNER");
+            public static readonly Op SETPERMISSION = new Op("SETPERMISSION");
+            public static readonly Op SETTIMES = new Op("SETTIMES");
+            public static readonly Op RENEWDELEGATIONTOKEN = new Op("RENEWDELEGATIONTOKEN");
+            public static readonly Op CANCELDELEGATIONTOKEN = new Op("CANCELDELEGATIONTOKEN");
+            public static readonly Op CREATESNAPSHOT = new Op("CREATESNAPSHOT");
+            public static readonly Op RENAMESNAPSHOT = new Op("RENAMESNAPSHOT");
+            public static readonly Op SETXATTR = new Op("SETXATTR");
+            public static readonly Op REMOVEXATTR = new Op("REMOVEXATTR");
+            public static readonly Op SETSTORAGEPOLICY = new Op("SETSTORAGEPOLICY");
+
+            // POST
+            public static readonly Op APPEND = new Op("APPEND");
+            public static readonly Op CONCAT = new Op("CONCAT");
+            public static readonly Op TRUNCATE = new Op("TRUNCATE");
+            public static readonly Op UNSETSTORAGEPOLICY = new Op("UNSETSTORAGEPOLICY");
+
+            // DELETE
+            public static readonly Op DELETE = new Op("DELETE");
+            public static readonly Op DELETESNAPSHOT = new Op("DELETESNAPSHOT");
 
             private Op(string value)
             {

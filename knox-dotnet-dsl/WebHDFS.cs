@@ -95,6 +95,55 @@ namespace knoxdotnetdsl
         }
 
         /// <summary>
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Append_to_a_File
+        /// </summary>
+        public async Task<bool> AppendFileAsync(
+            string filePath,
+            string path,
+            Nullable<int> buffersize = null)
+        {
+            using (var fileStream = new FileStream(filePath, FileMode.Open))
+            {
+                return await AppendFileAsync(fileStream, path, buffersize);
+            }
+        }
+
+        /// <summary>
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Append_to_a_File
+        /// Note: You are responsible for closing the stream you send in.
+        /// </summary>
+        public async Task<bool> AppendFileAsync(
+            Stream stream,
+            string path,
+            Nullable<int> buffersize = null)
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            WebHDFSHttpQueryParameter.setOp(query, WebHDFSHttpQueryParameter.Op.APPEND);
+            WebHDFSHttpQueryParameter.setBuffersize(query, buffersize);
+
+            string requestPath = new Uri(path + '?' + query).PathAndQuery;
+
+            using (var handler = getHttpClientHandler(false))
+            {
+                using (var client = getHttpClient(handler))
+                {
+                    var response = await client.PostAsync(requestPath, new ByteArrayContent(new byte[] { }));
+                    if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
+                    {
+                        var response2 = await client.PostAsync(response.Headers.Location, new StreamContent(stream));
+                        response2.EnsureSuccessStatusCode();
+                        return true;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Should get a 307. Instead we got: " +
+                                                            response.StatusCode + " " + response.ReasonPhrase);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Open_and_Read_a_File
         /// Note: You are responsible for closing the stream you send in.
         /// </summary>
@@ -221,6 +270,59 @@ namespace knoxdotnetdsl
                     var response = await client.GetAsync(requestPath);
                     response.EnsureSuccessStatusCode();
                     return await response.Content.ReadAsStringAsync();
+                }
+            }
+        }
+
+        /// <summary>
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Get_Content_Summary_of_a_Directory
+        /// </summary>
+        public async Task<string> GetContentSummaryAsync(
+            string path)
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            WebHDFSHttpQueryParameter.setOp(query, WebHDFSHttpQueryParameter.Op.GETCONTENTSUMMARY);
+
+            string requestPath = new Uri(path + '?' + query).PathAndQuery;
+
+            using (var handler = getHttpClientHandler(false))
+            {
+                using (var client = getHttpClient(handler))
+                {
+                    var response = await client.GetAsync(requestPath);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadAsStringAsync();
+                }
+            }
+        }
+
+        /// <summary>
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Get_File_Checksum
+        /// </summary>
+        public async Task<string> GetFileChecksumAsync(
+            string path)
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            WebHDFSHttpQueryParameter.setOp(query, WebHDFSHttpQueryParameter.Op.GETFILECHECKSUM);
+
+            string requestPath = new Uri(path + '?' + query).PathAndQuery;
+
+            using (var handler = getHttpClientHandler(false))
+            {
+                using (var client = getHttpClient(handler))
+                {
+                    var response = await client.GetAsync(requestPath);
+                    if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
+                    {
+                        var response2 = await client.GetAsync(response.Headers.Location);
+                        response2.EnsureSuccessStatusCode();
+                        return await response2.Content.ReadAsStringAsync();
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Should get a 307. Instead we got: " +
+                                                            response.StatusCode + " " + response.ReasonPhrase);
+                    }
                 }
             }
         }
