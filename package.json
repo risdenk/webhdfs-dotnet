@@ -1,0 +1,24 @@
+{
+  "name": "knox-dotnet-dsl",
+  "version": "1.0.0",
+  "description": "",
+  "main": "test.js",
+  "dependencies": {
+    "express": "^4.16.2",
+    "express-basic-auth": "^1.1.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/risdenk/knox-dotnet-dsl.git"
+  },
+  "author": "",
+  "license": "APACHE",
+  "bugs": {
+    "url": "https://github.com/risdenk/knox-dotnet-dsl/issues"
+  },
+  "homepage": "https://github.com/risdenk/knox-dotnet-dsl#readme"
+}
