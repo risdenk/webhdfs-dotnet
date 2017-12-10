@@ -9,9 +9,9 @@ namespace knox_dotnet_dsl_test
 {
     public class IntegrationTests
     {
-        private readonly ITestOutputHelper output;
+        readonly ITestOutputHelper output;
 
-        private readonly ContentSummary ExpectedContentSummary = new ContentSummary()
+        readonly ContentSummary ExpectedContentSummary = new ContentSummary
         {
             directoryCount = 2,
             fileCount = 1,
@@ -19,19 +19,19 @@ namespace knox_dotnet_dsl_test
             quota = -1,
             spaceConsumed = 24930,
             spaceQuota = -1,
-            typeQuota = new TypeQuota()
+            typeQuota = new TypeQuota
             {
-                ARCHIVE = new ARCHIVE()
+                ARCHIVE = new ARCHIVE
                 {
                     consumed = 500,
                     quota = 10000
                 },
-                DISK = new DISK()
+                DISK = new DISK
                 {
                     consumed = 500,
                     quota = 10000
                 },
-                SSD = new SSD()
+                SSD = new SSD
                 {
                     consumed = 500,
                     quota = 10000
@@ -39,14 +39,14 @@ namespace knox_dotnet_dsl_test
             }
         };
 
-        private readonly FileChecksum ExpectedFileChecksum = new FileChecksum()
+        readonly FileChecksum ExpectedFileChecksum = new FileChecksum
         {
             algorithm = "MD5-of-1MD5-of-512CRC32",
             bytes = "eadb10de24aa315748930df6e185c0d",
             length = 28
         };
 
-        private readonly FileStatus ExpectedFileStatus = new FileStatus()
+        readonly FileStatus ExpectedFileStatus = new FileStatus
         {
             accessTime = 0,
             blockSize = 0,
@@ -60,10 +60,10 @@ namespace knox_dotnet_dsl_test
             type = "DIRECTORY"
         };
 
-        private readonly FileStatuses ExpectedListStatus = new FileStatuses()
+        readonly FileStatuses ExpectedListStatus = new FileStatuses
         {
-            FileStatus = new List<FileStatus>() {
-                new FileStatus() {
+            FileStatus = new List<FileStatus> {
+                new FileStatus {
                     accessTime = 1320171722771,
                     blockSize = 33554432,
                     group = "supergroup",
@@ -75,7 +75,7 @@ namespace knox_dotnet_dsl_test
                     replication = 1,
                     type = "FILE"
                 },
-                new FileStatus() {
+                new FileStatus {
                     accessTime = 0,
                     blockSize = 0,
                     group = "supergroup",
@@ -90,7 +90,7 @@ namespace knox_dotnet_dsl_test
             }
         };
 
-        private readonly string ExpectedHomeDirectory = "/user/szetszwo";
+        readonly string ExpectedHomeDirectory = "/user/szetszwo";
 
         public IntegrationTests(ITestOutputHelper output)
         {
@@ -252,8 +252,9 @@ namespace knox_dotnet_dsl_test
             //var ActualFileStatus = webhdfs.GetFileStatus("/tmp/t8.shakespeare.txt");
             //var ActualListStatus = webhdfs.ListStatus("/tmp");
 
-            //webhdfs.DownloadFile("t8.shakespeare.txt", "/tmp/t8.shakespeare.txt");
-            //webhdfs.UploadFile("t8.shakespeare.txt", "/tmp/t8.shakespeare.txt.dotnet");
+            //Assert.True(webhdfs.DownloadFile("t8.shakespeare.txt", "/tmp/t8.shakespeare.txt"));
+            //Assert.True(webhdfs.UploadFile("t8.shakespeare.txt", "/tmp/t8.shakespeare.txt.dotnet", overwrite: true));
+
         }
     }
 }

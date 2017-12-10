@@ -9,7 +9,7 @@ namespace knoxdotnetdsl
 {
     public class WebHDFS
     {
-        private string _baseAPI;
+        readonly string _baseAPI;
 
         public WebHDFS(string BaseAPI) {
             _baseAPI = BaseAPI;
@@ -17,8 +17,8 @@ namespace knoxdotnetdsl
 
         public NetworkCredential Credentials { get; set; }
 
-        private HttpClientHandler getHttpClientHandler(bool AllowRedirect=true) {
-            return new HttpClientHandler() 
+        HttpClientHandler getHttpClientHandler(bool AllowRedirect=true) {
+            return new HttpClientHandler 
             {
                 AllowAutoRedirect = AllowRedirect,
                 Credentials = Credentials,
@@ -26,10 +26,10 @@ namespace knoxdotnetdsl
             };
         }
 
-        private HttpClient getHttpClient(HttpClientHandler handler) {
+        HttpClient getHttpClient(HttpClientHandler handler) {
             return new HttpClient(handler)
             {
-                Timeout = TimeSpan.FromMinutes(10)
+                Timeout = TimeSpan.FromMinutes(15)
             };
         }
 
@@ -40,10 +40,10 @@ namespace knoxdotnetdsl
             string filePath,
             string path,
             bool overwrite = false,
-            Nullable<long> blocksize = null,
-            Nullable<short> replication = null,
+            long? blocksize = null,
+            short? replication = null,
             string permission = null,
-            Nullable<int> buffersize = null)
+            int? buffersize = null)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Open))
             {
@@ -59,10 +59,10 @@ namespace knoxdotnetdsl
             Stream stream,
             string path,
             bool overwrite = false,
-            Nullable<long> blocksize = null,
-            Nullable<short> replication = null,
+            long? blocksize = null,
+            short? replication = null,
             string permission = null,
-            Nullable<int> buffersize = null)
+            int? buffersize = null)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
             WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.CREATE);
@@ -79,13 +79,13 @@ namespace knoxdotnetdsl
                 using (var client = getHttpClient(handler))
                 {
                     var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] {})).Result;
-                    if(response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect)) {
+                    if(response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
+                    {
                         var response2 = client.PutAsync(response.Headers.Location, new StreamContent(stream)).Result;
                         return response2.IsSuccessStatusCode;
-                    } else {
-                        throw new InvalidOperationException("Should get a 307. Instead we got: " + 
-                                                            response.StatusCode + " " + response.ReasonPhrase);
                     }
+                    throw new InvalidOperationException("Should get a 307. Instead we got: " + 
+                                                        response.StatusCode + " " + response.ReasonPhrase);
                 }
             }
         }
@@ -96,7 +96,7 @@ namespace knoxdotnetdsl
         public bool AppendFile(
             string filePath,
             string path,
-            Nullable<int> buffersize = null)
+            int? buffersize = null)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Open))
             {
@@ -111,7 +111,7 @@ namespace knoxdotnetdsl
         public bool AppendStream(
             Stream stream,
             string path,
-            Nullable<int> buffersize = null)
+            int? buffersize = null)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
             WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.APPEND);
@@ -129,11 +129,8 @@ namespace knoxdotnetdsl
                         var response2 = client.PostAsync(response.Headers.Location, new StreamContent(stream)).Result;
                         return response2.IsSuccessStatusCode;
                     }
-                    else
-                    {
-                        throw new InvalidOperationException("Should get a 307. Instead we got: " +
-                                                            response.StatusCode + " " + response.ReasonPhrase);
-                    }
+                    throw new InvalidOperationException("Should get a 307. Instead we got: " +
+                                                        response.StatusCode + " " + response.ReasonPhrase);
                 }
             }
         }
@@ -144,9 +141,9 @@ namespace knoxdotnetdsl
         public bool DownloadFile(
             string filePath,
             string path,
-            Nullable<long> offset = null,
-            Nullable<long> length = null,
-            Nullable<int> buffersize = null)
+            long? offset = null,
+            long? length = null,
+            int? buffersize = null)
         {
             string pathname = Path.GetFullPath(filePath);
             if (File.Exists(pathname))
@@ -167,9 +164,9 @@ namespace knoxdotnetdsl
         public bool ReadStream(
             Stream stream,
             string path,
-            Nullable<long> offset = null,
-            Nullable<long> length = null,
-            Nullable<int> buffersize = null)
+            long? offset = null,
+            long? length = null,
+            int? buffersize = null)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
             WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.OPEN);
@@ -194,11 +191,8 @@ namespace knoxdotnetdsl
                         }
                         return false;
                     }
-                    else
-                    {
-                        throw new InvalidOperationException("Should get a 307. Instead we got: " +
-                                                            response.StatusCode + " " + response.ReasonPhrase);
-                    }
+                    throw new InvalidOperationException("Should get a 307. Instead we got: " +
+                                                        response.StatusCode + " " + response.ReasonPhrase);
                 }
             }
         }
@@ -320,11 +314,8 @@ namespace knoxdotnetdsl
                         var serializer = new DataContractJsonSerializer(typeof(FileChecksumClass));
                         return ((FileChecksumClass)serializer.ReadObject(response2.Content.ReadAsStreamAsync().Result)).FileChecksum;
                     }
-                    else
-                    {
-                        throw new InvalidOperationException("Should get a 307. Instead we got: " +
-                                                            response.StatusCode + " " + response.ReasonPhrase);
-                    }
+                    throw new InvalidOperationException("Should get a 307. Instead we got: " +
+                                                        response.StatusCode + " " + response.ReasonPhrase);
                 }
             }
         }
@@ -359,7 +350,7 @@ namespace knoxdotnetdsl
         /// </summary>
         public Boolean Delete(
             string path,
-            Nullable<bool> recursive = null)
+            bool? recursive = null)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
             WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.DELETE);
@@ -433,7 +424,7 @@ namespace knoxdotnetdsl
         public bool CreateSymlink(
             string path,
             string destination,
-            Nullable<bool> createParent)
+            bool? createParent)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
             WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.CREATESYMLINK);
@@ -527,7 +518,7 @@ namespace knoxdotnetdsl
         /// </summary>
         public Boolean SetReplication(
             string path,
-            Nullable<short> replication = null)
+            short? replication = null)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
             WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.SETREPLICATION);
@@ -552,8 +543,8 @@ namespace knoxdotnetdsl
         /// </summary>
         public Boolean SetTimes(
             string path,
-            Nullable<short> modificationtime = null,
-            Nullable<short> accesstime = null)
+            short? modificationtime = null,
+            short? accesstime = null)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
             WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.SETTIMES);

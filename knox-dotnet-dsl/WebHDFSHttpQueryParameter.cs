@@ -4,13 +4,13 @@ using System.Text.RegularExpressions;
 
 namespace knoxdotnetdsl
 {
-    public class WebHDFSHttpQueryParameter
+    public static class WebHDFSHttpQueryParameter
     {
         // Check if octal pattern for permissions
-        private static readonly string permissionPattern = "^[0-1]?[0-7]?[0-7]?[0-7]$";
+        static readonly string permissionPattern = "^[0-1]?[0-7]?[0-7]?[0-7]$";
 
         // Check if octal pattern for permissions
-        private static readonly string fsactionPattern = "^[r-][w-][x-]$";
+        static readonly string fsactionPattern = "^[r-][w-][x-]$";
 
         public sealed class Op
         {
@@ -55,7 +55,7 @@ namespace knoxdotnetdsl
             public static readonly Op DELETE = new Op("DELETE");
             public static readonly Op DELETESNAPSHOT = new Op("DELETESNAPSHOT");
 
-            private Op(string value)
+            Op(string value)
             {
                 Value = value;
             }
@@ -83,7 +83,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="overwrite">Overwrite.</param>
-        public static NameValueCollection SetOverwrite(NameValueCollection query, Nullable<bool> overwrite)
+        public static NameValueCollection SetOverwrite(NameValueCollection query, bool? overwrite)
         {
             query.Set("overwrite", overwrite.GetValueOrDefault(false).ToString().ToLower());
             return query;
@@ -96,7 +96,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="blocksize">Blocksize.</param>
-        public static NameValueCollection setBlocksize(NameValueCollection query, Nullable<long> blocksize)
+        public static NameValueCollection setBlocksize(NameValueCollection query, long? blocksize)
         {
             if (blocksize != null)
             {
@@ -122,7 +122,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="replication">Replication.</param>
-        public static NameValueCollection SetReplication(NameValueCollection query, Nullable<short> replication)
+        public static NameValueCollection SetReplication(NameValueCollection query, short? replication)
         {
             if (replication != null)
             {
@@ -162,7 +162,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="buffersize">Buffer Size.</param>
-        public static NameValueCollection SetBuffersize(NameValueCollection query, Nullable<int> buffersize)
+        public static NameValueCollection SetBuffersize(NameValueCollection query, int? buffersize)
         {
             if (buffersize != null)
             {
@@ -188,7 +188,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="offset">Offset.</param>
-        public static NameValueCollection SetOffset(NameValueCollection query, Nullable<long> offset)
+        public static NameValueCollection SetOffset(NameValueCollection query, long? offset)
         {
             if (offset != null)
             {
@@ -197,13 +197,10 @@ namespace knoxdotnetdsl
                     query.Set("offset", offset.ToString());
                     return query;
                 }
-                else
-                {
-                    throw new ArgumentException(
-                        "Offset must be greater than or equal to 0. " +
-                        "See https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Offset"
-                    );
-                }
+                throw new ArgumentException(
+                    "Offset must be greater than or equal to 0. " +
+                    "See https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Offset"
+                );
             }
             return query;
         }
@@ -215,7 +212,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="length">Length.</param>
-        public static NameValueCollection SetLength(NameValueCollection query, Nullable<long> length)
+        public static NameValueCollection SetLength(NameValueCollection query, long? length)
         {
             if (length != null)
             {
@@ -257,7 +254,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="recursive">Recursive.</param>
-        public static NameValueCollection SetRecursive(NameValueCollection query, Nullable<bool> recursive)
+        public static NameValueCollection SetRecursive(NameValueCollection query, bool? recursive)
         {
             if (recursive != null)
             {
@@ -273,7 +270,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="newlength">newlength.</param>
-        public static NameValueCollection SetNewLength(NameValueCollection query, Nullable<long> newlength)
+        public static NameValueCollection SetNewLength(NameValueCollection query, long? newlength)
         {
             if (newlength != null)
             {
@@ -315,7 +312,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="createParent">createParent.</param>
-        public static NameValueCollection SetCreateParent(NameValueCollection query, Nullable<bool> createParent)
+        public static NameValueCollection SetCreateParent(NameValueCollection query, bool? createParent)
         {
             if (createParent != null)
             {
@@ -363,7 +360,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="modificationtime">modificationtime.</param>
-        public static NameValueCollection SetModificationTime(NameValueCollection query, Nullable<long> modificationtime)
+        public static NameValueCollection SetModificationTime(NameValueCollection query, long? modificationtime)
         {
             if (modificationtime != null)
             {
@@ -389,7 +386,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="accesstime">accesstime.</param>
-        public static NameValueCollection SetAccessTime(NameValueCollection query, Nullable<long> accesstime)
+        public static NameValueCollection SetAccessTime(NameValueCollection query, long? accesstime)
         {
             if (accesstime != null)
             {

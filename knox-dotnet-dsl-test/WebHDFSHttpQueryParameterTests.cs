@@ -7,7 +7,7 @@ namespace knox_dotnet_dsl_test
 {
     public class WebHDFSHttpQueryParameterTests
     {
-        private NameValueCollection getEmptyQuery() {
+        NameValueCollection getEmptyQuery() {
             return new NameValueCollection();
         }
 
