@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.Serialization.Json;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace knoxdotnetdsl
@@ -36,7 +37,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Create_and_Write_to_a_File
         /// </summary>
-        public bool UploadFile(
+        public async Task<bool> UploadFile(
             string filePath,
             string path,
             bool overwrite = false,
@@ -47,7 +48,7 @@ namespace knoxdotnetdsl
         {
             using (var fileStream = new FileStream(filePath, FileMode.Open))
             {
-                return WriteStream(fileStream, path, overwrite, blocksize, replication, permission, buffersize);
+                return await WriteStream(fileStream, path, overwrite, blocksize, replication, permission, buffersize);
             }
         }
 
@@ -55,7 +56,7 @@ namespace knoxdotnetdsl
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Create_and_Write_to_a_File
         /// Note: You are responsible for closing the stream you send in.
         /// </summary>
-        public bool WriteStream(
+        public async Task<bool> WriteStream(
             Stream stream,
             string path,
             bool overwrite = false,
@@ -78,10 +79,10 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] {})).Result;
+                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] {}));
                     if(response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
                     {
-                        var response2 = client.PutAsync(response.Headers.Location, new StreamContent(stream)).Result;
+                        var response2 = await client.PutAsync(response.Headers.Location, new StreamContent(stream));
                         return response2.IsSuccessStatusCode;
                     }
                     throw new InvalidOperationException("Should get a 307. Instead we got: " + 
@@ -93,14 +94,14 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Append_to_a_File
         /// </summary>
-        public bool AppendFile(
+        public async Task<bool> AppendFile(
             string filePath,
             string path,
             int? buffersize = null)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Open))
             {
-                return AppendStream(fileStream, path, buffersize);
+                return await AppendStream(fileStream, path, buffersize);
             }
         }
 
@@ -108,7 +109,7 @@ namespace knoxdotnetdsl
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Append_to_a_File
         /// Note: You are responsible for closing the stream you send in.
         /// </summary>
-        public bool AppendStream(
+        public async Task<bool> AppendStream(
             Stream stream,
             string path,
             int? buffersize = null)
@@ -123,10 +124,10 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.PostAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    var response = await client.PostAsync(requestPath, new ByteArrayContent(new byte[] { }));
                     if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
                     {
-                        var response2 = client.PostAsync(response.Headers.Location, new StreamContent(stream)).Result;
+                        var response2 = await client.PostAsync(response.Headers.Location, new StreamContent(stream));
                         return response2.IsSuccessStatusCode;
                     }
                     throw new InvalidOperationException("Should get a 307. Instead we got: " +
@@ -138,7 +139,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Open_and_Read_a_File
         /// </summary>
-        public bool DownloadFile(
+        public async Task<bool> DownloadFile(
             string filePath,
             string path,
             long? offset = null,
@@ -153,7 +154,7 @@ namespace knoxdotnetdsl
 
             using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
             {
-                return ReadStream(fileStream, path, offset, length, buffersize);
+                return await ReadStream(fileStream, path, offset, length, buffersize);
             }
         }
 
@@ -161,7 +162,7 @@ namespace knoxdotnetdsl
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Open_and_Read_a_File
         /// Note: You are responsible for closing the stream you send in.
         /// </summary>
-        public bool ReadStream(
+        public async Task<bool> ReadStream(
             Stream stream,
             string path,
             long? offset = null,
@@ -180,13 +181,13 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.GetAsync(requestPath).Result;
+                    var response = await client.GetAsync(requestPath);
                     if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
                     {
-                        var response2 = client.GetAsync(response.Headers.Location).Result;
+                        var response2 = await client.GetAsync(response.Headers.Location);
                         if (response2.IsSuccessStatusCode)
                         {
-                            response2.Content.CopyToAsync(stream).Wait();
+                            await response2.Content.CopyToAsync(stream);
                             return true;
                         }
                         return false;
@@ -200,7 +201,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Make_a_Directory
         /// </summary>
-        public Boolean MakeDirectory(
+        public async Task<Boolean> MakeDirectory(
             string path,
             string permission = null)
         {
@@ -214,10 +215,10 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
                     response.EnsureSuccessStatusCode();
                     var serializer = new DataContractJsonSerializer(typeof(Boolean));
-                    return ((Boolean)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result));
+                    return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
                 }
             }
         }
@@ -225,7 +226,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Status_of_a_FileDirectory
         /// </summary>
-        public FileStatus GetFileStatus(
+        public async Task<FileStatus> GetFileStatus(
             string path)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
@@ -237,10 +238,10 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.GetAsync(requestPath).Result;
+                    var response = await client.GetAsync(requestPath);
                     response.EnsureSuccessStatusCode();
                     var serializer = new DataContractJsonSerializer(typeof(FileStatusClass));
-                    return ((FileStatusClass)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result)).FileStatus;
+                    return ((FileStatusClass)serializer.ReadObject(await response.Content.ReadAsStreamAsync())).FileStatus;
                 }
             }
         }
@@ -248,7 +249,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#List_a_Directory
         /// </summary>
-        public FileStatuses ListStatus(
+        public async Task<FileStatuses> ListStatus(
             string path)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
@@ -260,10 +261,10 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.GetAsync(requestPath).Result;
+                    var response = await client.GetAsync(requestPath);
                     response.EnsureSuccessStatusCode();
                     var serializer = new DataContractJsonSerializer(typeof(FileStatusesClass));
-                    return ((FileStatusesClass)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result)).FileStatuses;
+                    return ((FileStatusesClass)serializer.ReadObject(await response.Content.ReadAsStreamAsync())).FileStatuses;
                 }
             }
         }
@@ -271,7 +272,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Get_Content_Summary_of_a_Directory
         /// </summary>
-        public ContentSummary GetContentSummary(
+        public async Task<ContentSummary> GetContentSummary(
             string path)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
@@ -283,10 +284,10 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.GetAsync(requestPath).Result;
+                    var response = await client.GetAsync(requestPath);
                     response.EnsureSuccessStatusCode();
                     var serializer = new DataContractJsonSerializer(typeof(ContentSummaryClass));
-                    return ((ContentSummaryClass)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result)).ContentSummary;
+                    return ((ContentSummaryClass)serializer.ReadObject(await response.Content.ReadAsStreamAsync())).ContentSummary;
                 }
             }
         }
@@ -294,7 +295,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Get_File_Checksum
         /// </summary>
-        public FileChecksum GetFileChecksum(
+        public async Task<FileChecksum> GetFileChecksum(
             string path)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
@@ -306,13 +307,13 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.GetAsync(requestPath).Result;
+                    var response = await client.GetAsync(requestPath);
                     if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
                     {
-                        var response2 = client.GetAsync(response.Headers.Location).Result;
+                        var response2 = await client.GetAsync(response.Headers.Location);
                         response2.EnsureSuccessStatusCode();
                         var serializer = new DataContractJsonSerializer(typeof(FileChecksumClass));
-                        return ((FileChecksumClass)serializer.ReadObject(response2.Content.ReadAsStreamAsync().Result)).FileChecksum;
+                        return ((FileChecksumClass)serializer.ReadObject(await response2.Content.ReadAsStreamAsync())).FileChecksum;
                     }
                     throw new InvalidOperationException("Should get a 307. Instead we got: " +
                                                         response.StatusCode + " " + response.ReasonPhrase);
@@ -323,7 +324,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Rename_a_FileDirectory
         /// </summary>
-        public Boolean Rename(
+        public async Task<Boolean> Rename(
             string path,
             string destination)
         {
@@ -337,10 +338,10 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
                     response.EnsureSuccessStatusCode();
                     var serializer = new DataContractJsonSerializer(typeof(Boolean));
-                    return ((Boolean)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result));
+                    return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
                 }
             }
         }
@@ -348,7 +349,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Delete_a_FileDirectory
         /// </summary>
-        public Boolean Delete(
+        public async Task<Boolean> Delete(
             string path,
             bool? recursive = null)
         {
@@ -362,10 +363,10 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.DeleteAsync(requestPath).Result;
+                    var response = await client.DeleteAsync(requestPath);
                     response.EnsureSuccessStatusCode();
                     var serializer = new DataContractJsonSerializer(typeof(Boolean));
-                    return ((Boolean)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result));
+                    return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
                 }
             }
         }
@@ -373,7 +374,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Truncate_a_File
         /// </summary>
-        public Boolean Truncate(
+        public async Task<Boolean> Truncate(
             string path,
             long newlength)
         {
@@ -387,10 +388,10 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.PostAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    var response = await client.PostAsync(requestPath, new ByteArrayContent(new byte[] { }));
                     response.EnsureSuccessStatusCode();
                     var serializer = new DataContractJsonSerializer(typeof(Boolean));
-                    return ((Boolean)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result));
+                    return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
                 }
             }
         }
@@ -398,7 +399,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Concat_Files
         /// </summary>
-        public bool Concat(
+        public async Task<bool> Concat(
             string path,
             string sources)
         {
@@ -412,7 +413,7 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.PostAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    var response = await client.PostAsync(requestPath, new ByteArrayContent(new byte[] { }));
                     return response.IsSuccessStatusCode;
                 }
             }
@@ -421,7 +422,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Create_a_Symbolic_Link
         /// </summary>
-        public bool CreateSymlink(
+        public async Task<bool> CreateSymlink(
             string path,
             string destination,
             bool? createParent)
@@ -437,7 +438,7 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
                     return response.IsSuccessStatusCode;
                 }
             }
@@ -446,7 +447,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Status_of_a_FileDirectory
         /// </summary>
-        public string GetHomeDirectory()
+        public async Task<string> GetHomeDirectory()
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
             WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.GETHOMEDIRECTORY);
@@ -457,10 +458,10 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.GetAsync(requestPath).Result;
+                    var response = await client.GetAsync(requestPath);
                     response.EnsureSuccessStatusCode();
                     var serializer = new DataContractJsonSerializer(typeof(PathClass));
-                    return ((PathClass)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result)).Path;
+                    return ((PathClass)serializer.ReadObject(await response.Content.ReadAsStreamAsync())).Path;
                 }
             }
         }
@@ -468,7 +469,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Set_Permission
         /// </summary>
-        public bool SetPermission(
+        public async Task<bool> SetPermission(
             string path,
             string permission = null)
         {
@@ -482,7 +483,7 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
                     return response.IsSuccessStatusCode;
                 }
             }
@@ -491,7 +492,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Set_Owner
         /// </summary>
-        public bool SetOwner(
+        public async Task<bool> SetOwner(
             string path,
             string owner = null,
             string group = null)
@@ -507,7 +508,7 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
                     return response.IsSuccessStatusCode;
                 }
             }
@@ -516,7 +517,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Set_Replication_Factor
         /// </summary>
-        public Boolean SetReplication(
+        public async Task<Boolean> SetReplication(
             string path,
             short? replication = null)
         {
@@ -530,10 +531,10 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
                     response.EnsureSuccessStatusCode();
                     var serializer = new DataContractJsonSerializer(typeof(Boolean));
-                    return ((Boolean)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result));
+                    return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
                 }
             }
         }
@@ -541,7 +542,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Set_Replication_Factor
         /// </summary>
-        public Boolean SetTimes(
+        public async Task<Boolean> SetTimes(
             string path,
             short? modificationtime = null,
             short? accesstime = null)
@@ -557,10 +558,10 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
                     response.EnsureSuccessStatusCode();
                     var serializer = new DataContractJsonSerializer(typeof(Boolean));
-                    return ((Boolean)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result));
+                    return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
                 }
             }
         }
@@ -568,7 +569,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.7.3/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Check_access
         /// </summary>
-        public bool CheckAccess(
+        public async Task<bool> CheckAccess(
             string path,
             string fsaction)
         {
@@ -582,7 +583,7 @@ namespace knoxdotnetdsl
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = client.GetAsync(requestPath).Result;
+                    var response = await client.GetAsync(requestPath);
                     return response.IsSuccessStatusCode;
                 }
             }

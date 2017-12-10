@@ -104,7 +104,7 @@ namespace knox_dotnet_dsl_test
                 "http://localhost:3000"
             );
 
-            var ActualContentSummary = webhdfs.GetContentSummary("/ContentSummary");
+            var ActualContentSummary = webhdfs.GetContentSummary("/ContentSummary").Result;
             Assert.Equal(ExpectedContentSummary.directoryCount, ActualContentSummary.directoryCount);
             Assert.Equal(ExpectedContentSummary.fileCount, ActualContentSummary.fileCount);
             Assert.Equal(ExpectedContentSummary.length, ActualContentSummary.length);
@@ -124,12 +124,12 @@ namespace knox_dotnet_dsl_test
             Assert.Equal(ExpectedContentSummary.typeQuota.SSD.quota,
                          ActualContentSummary.typeQuota.SSD.quota);
 
-            var ActualFileChecksum = webhdfs.GetFileChecksum("/FileChecksum");
+            var ActualFileChecksum = webhdfs.GetFileChecksum("/FileChecksum").Result;
             Assert.Equal(ExpectedFileChecksum.algorithm, ActualFileChecksum.algorithm);
             Assert.Equal(ExpectedFileChecksum.bytes, ActualFileChecksum.bytes);
             Assert.Equal(ExpectedFileChecksum.length, ActualFileChecksum.length);
 
-            var ActualFileStatus = webhdfs.GetFileStatus("/FileStatus");
+            var ActualFileStatus = webhdfs.GetFileStatus("/FileStatus").Result;
             Assert.Equal(ExpectedFileStatus.accessTime, ActualFileStatus.accessTime);
             Assert.Equal(ExpectedFileStatus.blockSize, ActualFileStatus.blockSize);
             Assert.Equal(ExpectedFileStatus.group, ActualFileStatus.group);
@@ -141,7 +141,7 @@ namespace knox_dotnet_dsl_test
             Assert.Equal(ExpectedFileStatus.replication, ActualFileStatus.replication);
             Assert.Equal(ExpectedFileStatus.type, ActualFileStatus.type);
 
-            var ActualListStatus = webhdfs.ListStatus("/ListStatus");
+            var ActualListStatus = webhdfs.ListStatus("/ListStatus").Result;
             Assert.Equal(ExpectedListStatus.FileStatus.Count, ActualListStatus.FileStatus.Count);
             Assert.Equal(ExpectedListStatus.FileStatus[0].accessTime, ActualListStatus.FileStatus[0].accessTime);
             Assert.Equal(ExpectedListStatus.FileStatus[0].blockSize, ActualListStatus.FileStatus[0].blockSize);
@@ -164,7 +164,7 @@ namespace knox_dotnet_dsl_test
             Assert.Equal(ExpectedListStatus.FileStatus[1].replication, ActualListStatus.FileStatus[1].replication);
             Assert.Equal(ExpectedListStatus.FileStatus[1].type, ActualListStatus.FileStatus[1].type);
 
-            var ActualHomeDirectory = webhdfs.GetHomeDirectory();
+            var ActualHomeDirectory = webhdfs.GetHomeDirectory().Result;
             Assert.Equal(ExpectedHomeDirectory, ActualHomeDirectory);
         }
          
@@ -175,7 +175,7 @@ namespace knox_dotnet_dsl_test
                 Credentials = new NetworkCredential("admin", "admin")   
             };
 
-            var ActualContentSummary = webhdfs.GetContentSummary("/ContentSummary");
+            var ActualContentSummary = webhdfs.GetContentSummary("/ContentSummary").Result;
             Assert.Equal(ExpectedContentSummary.directoryCount, ActualContentSummary.directoryCount);
             Assert.Equal(ExpectedContentSummary.fileCount, ActualContentSummary.fileCount);
             Assert.Equal(ExpectedContentSummary.length, ActualContentSummary.length);
@@ -195,12 +195,12 @@ namespace knox_dotnet_dsl_test
             Assert.Equal(ExpectedContentSummary.typeQuota.SSD.quota,
                          ActualContentSummary.typeQuota.SSD.quota);
 
-            var ActualFileChecksum = webhdfs.GetFileChecksum("/FileChecksum");
+            var ActualFileChecksum = webhdfs.GetFileChecksum("/FileChecksum").Result;
             Assert.Equal(ExpectedFileChecksum.algorithm, ActualFileChecksum.algorithm);
             Assert.Equal(ExpectedFileChecksum.bytes, ActualFileChecksum.bytes);
             Assert.Equal(ExpectedFileChecksum.length, ActualFileChecksum.length);
 
-            var ActualFileStatus = webhdfs.GetFileStatus("/FileStatus");
+            var ActualFileStatus = webhdfs.GetFileStatus("/FileStatus").Result;
             Assert.Equal(ExpectedFileStatus.accessTime, ActualFileStatus.accessTime);
             Assert.Equal(ExpectedFileStatus.blockSize, ActualFileStatus.blockSize);
             Assert.Equal(ExpectedFileStatus.group, ActualFileStatus.group);
@@ -212,7 +212,7 @@ namespace knox_dotnet_dsl_test
             Assert.Equal(ExpectedFileStatus.replication, ActualFileStatus.replication);
             Assert.Equal(ExpectedFileStatus.type, ActualFileStatus.type);
 
-            var ActualListStatus = webhdfs.ListStatus("/ListStatus");
+            var ActualListStatus = webhdfs.ListStatus("/ListStatus").Result;
             Assert.Equal(ExpectedListStatus.FileStatus.Count, ActualListStatus.FileStatus.Count);
             Assert.Equal(ExpectedListStatus.FileStatus[0].accessTime, ActualListStatus.FileStatus[0].accessTime);
             Assert.Equal(ExpectedListStatus.FileStatus[0].blockSize, ActualListStatus.FileStatus[0].blockSize);
@@ -235,26 +235,8 @@ namespace knox_dotnet_dsl_test
             Assert.Equal(ExpectedListStatus.FileStatus[1].replication, ActualListStatus.FileStatus[1].replication);
             Assert.Equal(ExpectedListStatus.FileStatus[1].type, ActualListStatus.FileStatus[1].type);
 
-            var ActualHomeDirectory = webhdfs.GetHomeDirectory();
+            var ActualHomeDirectory = webhdfs.GetHomeDirectory().Result;
             Assert.Equal(ExpectedHomeDirectory, ActualHomeDirectory);
-        }
-
-        [Fact]
-        public void TestWebHDFSKnoxAuth()
-        {
-            var webhdfs = new WebHDFS("https://bigdata.mayo.edu/hdp/DEV3/knox/webhdfs/v1")
-            {
-                Credentials = new NetworkCredential("username", "password")
-            };
-
-            //var ActualContentSummary = webhdfs.GetContentSummary("/tmp/t8.shakespeare.txt");
-            //var ActualFileChecksum = webhdfs.GetFileChecksum("/tmp/t8.shakespeare.txt");
-            //var ActualFileStatus = webhdfs.GetFileStatus("/tmp/t8.shakespeare.txt");
-            //var ActualListStatus = webhdfs.ListStatus("/tmp");
-
-            //Assert.True(webhdfs.DownloadFile("t8.shakespeare.txt", "/tmp/t8.shakespeare.txt"));
-            //Assert.True(webhdfs.UploadFile("t8.shakespeare.txt", "/tmp/t8.shakespeare.txt.dotnet", overwrite: true));
-
         }
     }
 }
