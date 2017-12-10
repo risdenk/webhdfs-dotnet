@@ -2,7 +2,7 @@
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Threading.Tasks;
+using System.Runtime.Serialization.Json;
 using System.Web;
 
 namespace knoxdotnetdsl
@@ -12,12 +12,9 @@ namespace knoxdotnetdsl
         private Uri _baseAPI;
         private NetworkCredential _credential;
 
-        public WebHDFS(Uri BaseAPI, String Username=null, String Password=null) {
+        public WebHDFS(Uri BaseAPI, NetworkCredential Credential = null) {
             _baseAPI = BaseAPI;
-            if (Username != null && Password != null)
-            {
-                _credential = new NetworkCredential(Username, Password);
-            }
+            _credential = Credential;
         }
 
         private HttpClientHandler getHttpClientHandler(bool AllowRedirect=true) {
@@ -40,7 +37,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Create_and_Write_to_a_File
         /// </summary>
-        public async Task<HttpResponseMessage> CreateFileAsync(
+        public HttpResponseMessage CreateFile(
             string filePath,
             string path,
             bool overwrite = false,
@@ -51,7 +48,7 @@ namespace knoxdotnetdsl
         {
             using (var fileStream = new FileStream(filePath, FileMode.Open))
             {
-                return await CreateFileAsync(fileStream, path, overwrite, blocksize, replication, permission, buffersize);
+                return CreateFile(fileStream, path, overwrite, blocksize, replication, permission, buffersize);
             }
         }
 
@@ -59,7 +56,7 @@ namespace knoxdotnetdsl
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Create_and_Write_to_a_File
         /// Note: You are responsible for closing the stream you send in.
         /// </summary>
-        public async Task<HttpResponseMessage> CreateFileAsync(
+        public HttpResponseMessage CreateFile(
             Stream stream,
             string path,
             bool overwrite = false,
@@ -69,22 +66,22 @@ namespace knoxdotnetdsl
             Nullable<int> buffersize = null)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
-            WebHDFSHttpQueryParameter.setOp(query, WebHDFSHttpQueryParameter.Op.CREATE);
-            WebHDFSHttpQueryParameter.setOverwrite(query, overwrite);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.CREATE);
+            WebHDFSHttpQueryParameter.SetOverwrite(query, overwrite);
             WebHDFSHttpQueryParameter.setBlocksize(query, blocksize);
-            WebHDFSHttpQueryParameter.setReplication(query, replication);
-            WebHDFSHttpQueryParameter.setPermission(query, permission);
-            WebHDFSHttpQueryParameter.setBuffersize(query, buffersize);
+            WebHDFSHttpQueryParameter.SetReplication(query, replication);
+            WebHDFSHttpQueryParameter.SetPermission(query, permission);
+            WebHDFSHttpQueryParameter.SetBuffersize(query, buffersize);
 
-            string requestPath = new Uri(path + '?' + query).PathAndQuery;
+            string requestPath = path + '?' + query;
 
             using (var handler = getHttpClientHandler(false))
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] {}));
+                    var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] {})).Result;
                     if(response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect)) {
-                        var response2 = await client.PutAsync(response.Headers.Location, new StreamContent(stream));
+                        var response2 = client.PutAsync(response.Headers.Location, new StreamContent(stream)).Result;
                         return response2.EnsureSuccessStatusCode();
                     } else {
                         throw new InvalidOperationException("Should get a 307. Instead we got: " + 
@@ -97,14 +94,14 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Append_to_a_File
         /// </summary>
-        public async Task<bool> AppendFileAsync(
+        public bool AppendFile(
             string filePath,
             string path,
             Nullable<int> buffersize = null)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Open))
             {
-                return await AppendFileAsync(fileStream, path, buffersize);
+                return AppendFile(fileStream, path, buffersize);
             }
         }
 
@@ -112,25 +109,25 @@ namespace knoxdotnetdsl
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Append_to_a_File
         /// Note: You are responsible for closing the stream you send in.
         /// </summary>
-        public async Task<bool> AppendFileAsync(
+        public bool AppendFile(
             Stream stream,
             string path,
             Nullable<int> buffersize = null)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
-            WebHDFSHttpQueryParameter.setOp(query, WebHDFSHttpQueryParameter.Op.APPEND);
-            WebHDFSHttpQueryParameter.setBuffersize(query, buffersize);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.APPEND);
+            WebHDFSHttpQueryParameter.SetBuffersize(query, buffersize);
 
-            string requestPath = new Uri(path + '?' + query).PathAndQuery;
+            string requestPath = path + '?' + query;
 
             using (var handler = getHttpClientHandler(false))
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = await client.PostAsync(requestPath, new ByteArrayContent(new byte[] { }));
+                    var response = client.PostAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
                     if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
                     {
-                        var response2 = await client.PostAsync(response.Headers.Location, new StreamContent(stream));
+                        var response2 = client.PostAsync(response.Headers.Location, new StreamContent(stream)).Result;
                         response2.EnsureSuccessStatusCode();
                         return true;
                     }
@@ -147,7 +144,7 @@ namespace knoxdotnetdsl
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Open_and_Read_a_File
         /// Note: You are responsible for closing the stream you send in.
         /// </summary>
-        public async Task<bool> ReadFileAsync(
+        public bool ReadFile(
             string filePath,
             string path,
             Nullable<long> offset = null,
@@ -162,7 +159,7 @@ namespace knoxdotnetdsl
 
             using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
             {
-                return await ReadFileAsync(fileStream, path, offset, length, buffersize);
+                return ReadFile(fileStream, path, offset, length, buffersize);
             }
         }
 
@@ -170,7 +167,7 @@ namespace knoxdotnetdsl
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Open_and_Read_a_File
         /// Note: You are responsible for closing the stream you send in.
         /// </summary>
-        public async Task<bool> ReadFileAsync(
+        public bool ReadFile(
             Stream stream,
             string path,
             Nullable<long> offset = null,
@@ -178,23 +175,23 @@ namespace knoxdotnetdsl
             Nullable<int> buffersize = null)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
-            WebHDFSHttpQueryParameter.setOp(query, WebHDFSHttpQueryParameter.Op.OPEN);
-            WebHDFSHttpQueryParameter.setOffset(query, offset);
-            WebHDFSHttpQueryParameter.setLength(query, length);
-            WebHDFSHttpQueryParameter.setBuffersize(query, buffersize);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.OPEN);
+            WebHDFSHttpQueryParameter.SetOffset(query, offset);
+            WebHDFSHttpQueryParameter.SetLength(query, length);
+            WebHDFSHttpQueryParameter.SetBuffersize(query, buffersize);
 
-            string requestPath = new Uri(path + '?' + query).PathAndQuery;
+            string requestPath = path + '?' + query;
 
             using (var handler = getHttpClientHandler(false))
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = await client.GetAsync(requestPath);
+                    var response = client.GetAsync(requestPath).Result;
                     if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
                     {
-                        var response2 = await client.GetAsync(response.Headers.Location);
+                        var response2 = client.GetAsync(response.Headers.Location).Result;
                         response2.EnsureSuccessStatusCode();
-                        await response2.Content.CopyToAsync(stream);
+                        response2.Content.CopyToAsync(stream).RunSynchronously();
                         return true;
                     }
                     else
@@ -209,23 +206,23 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Make_a_Directory
         /// </summary>
-        public async Task<string> MakeDirectoryAsync(
+        public string MakeDirectory(
             string path,
             string permission = null)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
-            WebHDFSHttpQueryParameter.setOp(query, WebHDFSHttpQueryParameter.Op.MKDIRS);
-            WebHDFSHttpQueryParameter.setPermission(query, permission);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.MKDIRS);
+            WebHDFSHttpQueryParameter.SetPermission(query, permission);
 
-            string requestPath = new Uri(path + '?' + query).PathAndQuery;
+            string requestPath = path + '?' + query;
 
             using (var handler = getHttpClientHandler(false))
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
+                    var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
                     response.EnsureSuccessStatusCode();
-                    return await response.Content.ReadAsStringAsync();
+                    return response.Content.ReadAsStringAsync().Result;
                 }
             }
         }
@@ -233,21 +230,22 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Status_of_a_FileDirectory
         /// </summary>
-        public async Task<string> GetFileStatusAsync(
+        public FileStatus GetFileStatus(
             string path)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
-            WebHDFSHttpQueryParameter.setOp(query, WebHDFSHttpQueryParameter.Op.GETFILESTATUS);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.GETFILESTATUS);
 
-            string requestPath = new Uri(path + '?' + query).PathAndQuery;
+            string requestPath = path + '?' + query;
 
             using (var handler = getHttpClientHandler(false))
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = await client.GetAsync(requestPath);
+                    var response = client.GetAsync(requestPath).Result;
                     response.EnsureSuccessStatusCode();
-                    return await response.Content.ReadAsStringAsync();
+                    var serializer = new DataContractJsonSerializer(typeof(FileStatusClass));
+                    return ((FileStatusClass)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result)).FileStatus;
                 }
             }
         }
@@ -255,21 +253,22 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#List_a_Directory
         /// </summary>
-        public async Task<string> ListStatusAsync(
+        public FileStatuses ListStatus(
             string path)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
-            WebHDFSHttpQueryParameter.setOp(query, WebHDFSHttpQueryParameter.Op.LISTSTATUS);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.LISTSTATUS);
 
-            string requestPath = new Uri(path + '?' + query).PathAndQuery;
+            string requestPath = path + '?' + query;
 
             using (var handler = getHttpClientHandler(false))
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = await client.GetAsync(requestPath);
+                    var response = client.GetAsync(requestPath).Result;
                     response.EnsureSuccessStatusCode();
-                    return await response.Content.ReadAsStringAsync();
+                    var serializer = new DataContractJsonSerializer(typeof(FileStatusesClass));
+                    return ((FileStatusesClass)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result)).FileStatuses;
                 }
             }
         }
@@ -277,21 +276,22 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Get_Content_Summary_of_a_Directory
         /// </summary>
-        public async Task<string> GetContentSummaryAsync(
+        public ContentSummary GetContentSummary(
             string path)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
-            WebHDFSHttpQueryParameter.setOp(query, WebHDFSHttpQueryParameter.Op.GETCONTENTSUMMARY);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.GETCONTENTSUMMARY);
 
-            string requestPath = new Uri(path + '?' + query).PathAndQuery;
+            string requestPath = path + '?' + query;
 
             using (var handler = getHttpClientHandler(false))
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = await client.GetAsync(requestPath);
+                    var response = client.GetAsync(requestPath).Result;
                     response.EnsureSuccessStatusCode();
-                    return await response.Content.ReadAsStringAsync();
+                    var serializer = new DataContractJsonSerializer(typeof(ContentSummaryClass));
+                    return ((ContentSummaryClass)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result)).ContentSummary;
                 }
             }
         }
@@ -299,24 +299,25 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Get_File_Checksum
         /// </summary>
-        public async Task<string> GetFileChecksumAsync(
+        public FileChecksum GetFileChecksum(
             string path)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
-            WebHDFSHttpQueryParameter.setOp(query, WebHDFSHttpQueryParameter.Op.GETFILECHECKSUM);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.GETFILECHECKSUM);
 
-            string requestPath = new Uri(path + '?' + query).PathAndQuery;
+            string requestPath = path + '?' + query;
 
             using (var handler = getHttpClientHandler(false))
             {
                 using (var client = getHttpClient(handler))
                 {
-                    var response = await client.GetAsync(requestPath);
+                    var response = client.GetAsync(requestPath).Result;
                     if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
                     {
-                        var response2 = await client.GetAsync(response.Headers.Location);
+                        var response2 = client.GetAsync(response.Headers.Location).Result;
                         response2.EnsureSuccessStatusCode();
-                        return await response2.Content.ReadAsStringAsync();
+                        var serializer = new DataContractJsonSerializer(typeof(FileChecksumClass));
+                        return ((FileChecksumClass)serializer.ReadObject(response2.Content.ReadAsStreamAsync().Result)).FileChecksum;
                     }
                     else
                     {

@@ -67,7 +67,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="operation">Operation.</param>
-        public static NameValueCollection setOp(NameValueCollection query, Op operation)
+        public static NameValueCollection SetOp(NameValueCollection query, Op operation)
         {
             query.Set("op", operation.Value);
             return query;
@@ -80,7 +80,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="overwrite">Overwrite.</param>
-        public static NameValueCollection setOverwrite(NameValueCollection query, Nullable<bool> overwrite)
+        public static NameValueCollection SetOverwrite(NameValueCollection query, Nullable<bool> overwrite)
         {
             query.Set("overwrite", overwrite.GetValueOrDefault(false).ToString().ToLower());
             return query;
@@ -97,7 +97,17 @@ namespace knoxdotnetdsl
         {
             if (blocksize != null)
             {
-                query.Set("blocksize", blocksize.ToString());
+                if (blocksize > 0)
+                {
+                    query.Set("blocksize", blocksize.ToString());
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        "Blocksize must be greater than 0. " +
+                        "See https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Block_Size"
+                    );
+                }
             }
             return query;
         }
@@ -109,7 +119,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="replication">Replication.</param>
-        public static NameValueCollection setReplication(NameValueCollection query, Nullable<short> replication)
+        public static NameValueCollection SetReplication(NameValueCollection query, Nullable<short> replication)
         {
             if (replication != null)
             {
@@ -125,7 +135,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="permission">Permission.</param>
-        public static NameValueCollection setPermission(NameValueCollection query, String permission)
+        public static NameValueCollection SetPermission(NameValueCollection query, String permission)
         {
             if (permission != null)
             {
@@ -149,7 +159,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="buffersize">Buffer Size.</param>
-        public static NameValueCollection setBuffersize(NameValueCollection query, Nullable<int> buffersize)
+        public static NameValueCollection SetBuffersize(NameValueCollection query, Nullable<int> buffersize)
         {
             if (buffersize != null)
             {
@@ -175,7 +185,7 @@ namespace knoxdotnetdsl
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
         /// <param name="offset">Offset.</param>
-        public static NameValueCollection setOffset(NameValueCollection query, Nullable<long> offset)
+        public static NameValueCollection SetOffset(NameValueCollection query, Nullable<long> offset)
         {
             if ( offset == null) 
             {
@@ -201,8 +211,8 @@ namespace knoxdotnetdsl
         /// </summary>
         /// <returns>The query.</returns>
         /// <param name="query">Query.</param>
-        /// <param name="offset">Length.</param>
-        public static NameValueCollection setLength(NameValueCollection query, Nullable<long> length)
+        /// <param name="length">Length.</param>
+        public static NameValueCollection SetLength(NameValueCollection query, Nullable<long> length)
         {
             if (length != null)
             {
