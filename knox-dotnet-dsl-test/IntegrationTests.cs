@@ -239,18 +239,21 @@ namespace knox_dotnet_dsl_test
             Assert.Equal(ExpectedHomeDirectory, ActualHomeDirectory);
         }
 
-        //[Fact]
-        //public void TestWebHDFSKnoxAuth()
-        //{
-        //    var webhdfs = new WebHDFS(
-        //        "https://bigdata.mayo.edu/hdp/DEV3/knox/webhdfs/v1", 
-        //        new NetworkCredential("username", "password")
-        //    );
+        [Fact]
+        public void TestWebHDFSKnoxAuth()
+        {
+            var webhdfs = new WebHDFS("https://bigdata.mayo.edu/hdp/DEV3/knox/webhdfs/v1")
+            {
+                Credentials = new NetworkCredential("username", "password")
+            };
 
-        //    var ActualContentSummary = webhdfs.GetContentSummary("/tmp/t8.shakespeare.txt");
-        //    var ActualFileChecksum = webhdfs.GetFileChecksum("/tmp/t8.shakespeare.txt");
-        //    var ActualFileStatus = webhdfs.GetFileStatus("/tmp/t8.shakespeare.txt");
-        //    var ActualListStatus = webhdfs.ListStatus("/tmp");
-        //}
+            //var ActualContentSummary = webhdfs.GetContentSummary("/tmp/t8.shakespeare.txt");
+            //var ActualFileChecksum = webhdfs.GetFileChecksum("/tmp/t8.shakespeare.txt");
+            //var ActualFileStatus = webhdfs.GetFileStatus("/tmp/t8.shakespeare.txt");
+            //var ActualListStatus = webhdfs.ListStatus("/tmp");
+
+            //webhdfs.DownloadFile("t8.shakespeare.txt", "/tmp/t8.shakespeare.txt");
+            //webhdfs.UploadFile("t8.shakespeare.txt", "/tmp/t8.shakespeare.txt.dotnet");
+        }
     }
 }

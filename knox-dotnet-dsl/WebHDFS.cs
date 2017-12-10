@@ -36,7 +36,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Create_and_Write_to_a_File
         /// </summary>
-        public HttpResponseMessage CreateFile(
+        public bool UploadFile(
             string filePath,
             string path,
             bool overwrite = false,
@@ -47,7 +47,7 @@ namespace knoxdotnetdsl
         {
             using (var fileStream = new FileStream(filePath, FileMode.Open))
             {
-                return CreateFile(fileStream, path, overwrite, blocksize, replication, permission, buffersize);
+                return WriteStream(fileStream, path, overwrite, blocksize, replication, permission, buffersize);
             }
         }
 
@@ -55,7 +55,7 @@ namespace knoxdotnetdsl
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Create_and_Write_to_a_File
         /// Note: You are responsible for closing the stream you send in.
         /// </summary>
-        public HttpResponseMessage CreateFile(
+        public bool WriteStream(
             Stream stream,
             string path,
             bool overwrite = false,
@@ -81,7 +81,7 @@ namespace knoxdotnetdsl
                     var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] {})).Result;
                     if(response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect)) {
                         var response2 = client.PutAsync(response.Headers.Location, new StreamContent(stream)).Result;
-                        return response2.EnsureSuccessStatusCode();
+                        return response2.IsSuccessStatusCode;
                     } else {
                         throw new InvalidOperationException("Should get a 307. Instead we got: " + 
                                                             response.StatusCode + " " + response.ReasonPhrase);
@@ -100,7 +100,7 @@ namespace knoxdotnetdsl
         {
             using (var fileStream = new FileStream(filePath, FileMode.Open))
             {
-                return AppendFile(fileStream, path, buffersize);
+                return AppendStream(fileStream, path, buffersize);
             }
         }
 
@@ -108,7 +108,7 @@ namespace knoxdotnetdsl
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Append_to_a_File
         /// Note: You are responsible for closing the stream you send in.
         /// </summary>
-        public bool AppendFile(
+        public bool AppendStream(
             Stream stream,
             string path,
             Nullable<int> buffersize = null)
@@ -127,7 +127,7 @@ namespace knoxdotnetdsl
                     if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
                     {
                         var response2 = client.PostAsync(response.Headers.Location, new StreamContent(stream)).Result;
-                        return response.IsSuccessStatusCode;
+                        return response2.IsSuccessStatusCode;
                     }
                     else
                     {
@@ -140,9 +140,8 @@ namespace knoxdotnetdsl
 
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Open_and_Read_a_File
-        /// Note: You are responsible for closing the stream you send in.
         /// </summary>
-        public bool ReadFile(
+        public bool DownloadFile(
             string filePath,
             string path,
             Nullable<long> offset = null,
@@ -157,7 +156,7 @@ namespace knoxdotnetdsl
 
             using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
             {
-                return ReadFile(fileStream, path, offset, length, buffersize);
+                return ReadStream(fileStream, path, offset, length, buffersize);
             }
         }
 
@@ -165,7 +164,7 @@ namespace knoxdotnetdsl
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Open_and_Read_a_File
         /// Note: You are responsible for closing the stream you send in.
         /// </summary>
-        public bool ReadFile(
+        public bool ReadStream(
             Stream stream,
             string path,
             Nullable<long> offset = null,
@@ -188,9 +187,9 @@ namespace knoxdotnetdsl
                     if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
                     {
                         var response2 = client.GetAsync(response.Headers.Location).Result;
-                        if (response.IsSuccessStatusCode)
+                        if (response2.IsSuccessStatusCode)
                         {
-                            response2.Content.CopyToAsync(stream).RunSynchronously();
+                            response2.Content.CopyToAsync(stream).Wait();
                             return true;
                         }
                         return false;

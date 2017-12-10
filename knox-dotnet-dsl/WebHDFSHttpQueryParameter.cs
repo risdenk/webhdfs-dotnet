@@ -190,20 +190,20 @@ namespace knoxdotnetdsl
         /// <param name="offset">Offset.</param>
         public static NameValueCollection SetOffset(NameValueCollection query, Nullable<long> offset)
         {
-            if ( offset == null) 
+            if (offset != null)
             {
-                query.Set("offset", "null");
-            } 
-            else if (offset >= 0) 
-            {
-                query.Set("offset", offset.ToString());
-            } 
-            else 
-            {
-                throw new ArgumentException(
-                    "Offset must be greater than or equal to 0 or null. " +
-                    "See https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Offset"
-                );
+                if (offset >= 0)
+                {
+                    query.Set("offset", offset.ToString());
+                    return query;
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        "Offset must be greater than or equal to 0. " +
+                        "See https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Offset"
+                    );
+                }
             }
             return query;
         }

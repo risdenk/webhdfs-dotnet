@@ -106,8 +106,7 @@ namespace knox_dotnet_dsl_test
         public void TestOffset()
         {
             var query = getEmptyQuery();
-            WebHDFSHttpQueryParameter.SetOffset(query, null);
-            Assert.Equal("null", query["offset"]);
+            Assert.Equal(query, WebHDFSHttpQueryParameter.SetOffset(query, null));
 
             query = getEmptyQuery();
             WebHDFSHttpQueryParameter.SetOffset(query, 0);
