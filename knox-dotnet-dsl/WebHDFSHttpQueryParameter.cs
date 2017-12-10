@@ -9,6 +9,9 @@ namespace knoxdotnetdsl
         // Check if octal pattern for permissions
         private static readonly string permissionPattern = "^[0-1]?[0-7]?[0-7]?[0-7]$";
 
+        // Check if octal pattern for permissions
+        private static readonly string fsactionPattern = "^[r-][w-][x-]$";
+
         public sealed class Op
         {
             // GET
@@ -225,6 +228,206 @@ namespace knoxdotnetdsl
                     throw new ArgumentException(
                         "Length must be greater than or equal to 0. " +
                         "See https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Offset"
+                    );
+                }
+            }
+            return query;
+        }
+
+        /// <summary>
+        /// Sets the destination parameter on the query.
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Destination
+        /// </summary>
+        /// <returns>The query.</returns>
+        /// <param name="query">Query.</param>
+        /// <param name="destination">Destination.</param>
+        public static NameValueCollection SetDestination(NameValueCollection query, string destination)
+        {
+            if (!string.IsNullOrEmpty(destination))
+            {
+                query.Set("destination", destination);
+            }
+            return query;
+        }
+
+        /// <summary>
+        /// Sets the recursive parameter on the query.
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Recursive
+        /// </summary>
+        /// <returns>The query.</returns>
+        /// <param name="query">Query.</param>
+        /// <param name="recursive">Recursive.</param>
+        public static NameValueCollection SetRecursive(NameValueCollection query, Nullable<bool> recursive)
+        {
+            if (recursive != null)
+            {
+                query.Set("recursive", recursive.ToString().ToLower());
+            }
+            return query;
+        }
+
+        /// <summary>
+        /// Sets the newlength parameter on the query.
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#New_Length
+        /// </summary>
+        /// <returns>The query.</returns>
+        /// <param name="query">Query.</param>
+        /// <param name="newlength">newlength.</param>
+        public static NameValueCollection SetNewLength(NameValueCollection query, Nullable<long> newlength)
+        {
+            if (newlength != null)
+            {
+                if (newlength >= 0)
+                {
+                    query.Set("newlength", newlength.ToString());
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        "newlength must be greater than or equal to 0. " +
+                        "See https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#New_Length"
+                    );
+                }
+            }
+            return query;
+        }
+
+        /// <summary>
+        /// Sets the sources parameter on the query.
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Sources
+        /// </summary>
+        /// <returns>The query.</returns>
+        /// <param name="query">Query.</param>
+        /// <param name="sources">Sources.</param>
+        public static NameValueCollection SetSources(NameValueCollection query, string sources)
+        {
+            if (!string.IsNullOrEmpty(sources))
+            {
+                query.Set("sources", sources);
+            }
+            return query;
+        }
+
+        /// <summary>
+        /// Sets the createParent parameter on the query.
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Create_Parent
+        /// </summary>
+        /// <returns>The query.</returns>
+        /// <param name="query">Query.</param>
+        /// <param name="createParent">createParent.</param>
+        public static NameValueCollection SetCreateParent(NameValueCollection query, Nullable<bool> createParent)
+        {
+            if (createParent != null)
+            {
+                query.Set("createParent", createParent.ToString().ToLower());
+            }
+            return query;
+        }
+
+        /// <summary>
+        /// Sets the owner parameter on the query.
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Owner
+        /// </summary>
+        /// <returns>The query.</returns>
+        /// <param name="query">Query.</param>
+        /// <param name="owner">Owner.</param>
+        public static NameValueCollection SetOwner(NameValueCollection query, string owner)
+        {
+            if (!string.IsNullOrEmpty(owner))
+            {
+                query.Set("owner", owner);
+            }
+            return query;
+        }
+
+        /// <summary>
+        /// Sets the group parameter on the query.
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Group
+        /// </summary>
+        /// <returns>The query.</returns>
+        /// <param name="query">Query.</param>
+        /// <param name="group">Group.</param>
+        public static NameValueCollection SetGroup(NameValueCollection query, string group)
+        {
+            if (!string.IsNullOrEmpty(group))
+            {
+                query.Set("group", group);
+            }
+            return query;
+        }
+
+        /// <summary>
+        /// Sets the modificationtime parameter on the query.
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Modification_Time
+        /// </summary>
+        /// <returns>The query.</returns>
+        /// <param name="query">Query.</param>
+        /// <param name="modificationtime">modificationtime.</param>
+        public static NameValueCollection SetModificationTime(NameValueCollection query, Nullable<long> modificationtime)
+        {
+            if (modificationtime != null)
+            {
+                if (modificationtime >= -1)
+                {
+                    query.Set("modificationtime", modificationtime.ToString());
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        "modificationtime must be greater than or equal to -1. " +
+                        "See https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Modification_Time"
+                    );
+                }
+            }
+            return query;
+        }
+
+        /// <summary>
+        /// Sets the accesstime parameter on the query.
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Access_Time
+        /// </summary>
+        /// <returns>The query.</returns>
+        /// <param name="query">Query.</param>
+        /// <param name="accesstime">accesstime.</param>
+        public static NameValueCollection SetAccessTime(NameValueCollection query, Nullable<long> accesstime)
+        {
+            if (accesstime != null)
+            {
+                if (accesstime >= -1)
+                {
+                    query.Set("accesstime", accesstime.ToString());
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        "accesstime must be greater than or equal to -1. " +
+                        "See https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Access_Time"
+                    );
+                }
+            }
+            return query;
+        }
+
+        /// <summary>
+        /// Sets the fsaction parameter on the query.
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Check_access
+        /// </summary>
+        /// <returns>The query.</returns>
+        /// <param name="query">Query.</param>
+        /// <param name="fsaction">fsaction.</param>
+        public static NameValueCollection SetFSAction(NameValueCollection query, String fsaction)
+        {
+            if (fsaction != null)
+            {
+                if (Regex.Match(fsaction, fsactionPattern).Success)
+                {
+                    query.Set("fsaction", fsaction);
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        "Invalid fsaction specified. " +
+                        "See https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Check_access"
                     );
                 }
             }

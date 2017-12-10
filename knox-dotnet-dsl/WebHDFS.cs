@@ -9,19 +9,19 @@ namespace knoxdotnetdsl
 {
     public class WebHDFS
     {
-        private Uri _baseAPI;
-        private NetworkCredential _credential;
+        private string _baseAPI;
 
-        public WebHDFS(Uri BaseAPI, NetworkCredential Credential = null) {
+        public WebHDFS(string BaseAPI) {
             _baseAPI = BaseAPI;
-            _credential = Credential;
         }
+
+        public NetworkCredential Credentials { get; set; }
 
         private HttpClientHandler getHttpClientHandler(bool AllowRedirect=true) {
             return new HttpClientHandler() 
             {
                 AllowAutoRedirect = AllowRedirect,
-                Credentials = _credential,
+                Credentials = Credentials,
                 PreAuthenticate = true
             };
         }
@@ -29,7 +29,6 @@ namespace knoxdotnetdsl
         private HttpClient getHttpClient(HttpClientHandler handler) {
             return new HttpClient(handler)
             {
-                BaseAddress = _baseAPI,
                 Timeout = TimeSpan.FromMinutes(10)
             };
         }
@@ -73,7 +72,7 @@ namespace knoxdotnetdsl
             WebHDFSHttpQueryParameter.SetPermission(query, permission);
             WebHDFSHttpQueryParameter.SetBuffersize(query, buffersize);
 
-            string requestPath = path + '?' + query;
+            string requestPath = _baseAPI + path + '?' + query;
 
             using (var handler = getHttpClientHandler(false))
             {
@@ -118,7 +117,7 @@ namespace knoxdotnetdsl
             WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.APPEND);
             WebHDFSHttpQueryParameter.SetBuffersize(query, buffersize);
 
-            string requestPath = path + '?' + query;
+            string requestPath = _baseAPI + path + '?' + query;
 
             using (var handler = getHttpClientHandler(false))
             {
@@ -128,8 +127,7 @@ namespace knoxdotnetdsl
                     if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
                     {
                         var response2 = client.PostAsync(response.Headers.Location, new StreamContent(stream)).Result;
-                        response2.EnsureSuccessStatusCode();
-                        return true;
+                        return response.IsSuccessStatusCode;
                     }
                     else
                     {
@@ -180,7 +178,7 @@ namespace knoxdotnetdsl
             WebHDFSHttpQueryParameter.SetLength(query, length);
             WebHDFSHttpQueryParameter.SetBuffersize(query, buffersize);
 
-            string requestPath = path + '?' + query;
+            string requestPath = _baseAPI + path + '?' + query;
 
             using (var handler = getHttpClientHandler(false))
             {
@@ -190,9 +188,12 @@ namespace knoxdotnetdsl
                     if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
                     {
                         var response2 = client.GetAsync(response.Headers.Location).Result;
-                        response2.EnsureSuccessStatusCode();
-                        response2.Content.CopyToAsync(stream).RunSynchronously();
-                        return true;
+                        if (response.IsSuccessStatusCode)
+                        {
+                            response2.Content.CopyToAsync(stream).RunSynchronously();
+                            return true;
+                        }
+                        return false;
                     }
                     else
                     {
@@ -206,7 +207,7 @@ namespace knoxdotnetdsl
         /// <summary>
         /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Make_a_Directory
         /// </summary>
-        public string MakeDirectory(
+        public Boolean MakeDirectory(
             string path,
             string permission = null)
         {
@@ -214,7 +215,7 @@ namespace knoxdotnetdsl
             WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.MKDIRS);
             WebHDFSHttpQueryParameter.SetPermission(query, permission);
 
-            string requestPath = path + '?' + query;
+            string requestPath = _baseAPI + path + '?' + query;
 
             using (var handler = getHttpClientHandler(false))
             {
@@ -222,7 +223,8 @@ namespace knoxdotnetdsl
                 {
                     var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
                     response.EnsureSuccessStatusCode();
-                    return response.Content.ReadAsStringAsync().Result;
+                    var serializer = new DataContractJsonSerializer(typeof(Boolean));
+                    return ((Boolean)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result));
                 }
             }
         }
@@ -236,7 +238,7 @@ namespace knoxdotnetdsl
             var query = HttpUtility.ParseQueryString(string.Empty);
             WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.GETFILESTATUS);
 
-            string requestPath = path + '?' + query;
+            string requestPath = _baseAPI + path + '?' + query;
 
             using (var handler = getHttpClientHandler(false))
             {
@@ -259,7 +261,7 @@ namespace knoxdotnetdsl
             var query = HttpUtility.ParseQueryString(string.Empty);
             WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.LISTSTATUS);
 
-            string requestPath = path + '?' + query;
+            string requestPath = _baseAPI + path + '?' + query;
 
             using (var handler = getHttpClientHandler(false))
             {
@@ -282,7 +284,7 @@ namespace knoxdotnetdsl
             var query = HttpUtility.ParseQueryString(string.Empty);
             WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.GETCONTENTSUMMARY);
 
-            string requestPath = path + '?' + query;
+            string requestPath = _baseAPI + path + '?' + query;
 
             using (var handler = getHttpClientHandler(false))
             {
@@ -305,7 +307,7 @@ namespace knoxdotnetdsl
             var query = HttpUtility.ParseQueryString(string.Empty);
             WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.GETFILECHECKSUM);
 
-            string requestPath = path + '?' + query;
+            string requestPath = _baseAPI + path + '?' + query;
 
             using (var handler = getHttpClientHandler(false))
             {
@@ -324,6 +326,274 @@ namespace knoxdotnetdsl
                         throw new InvalidOperationException("Should get a 307. Instead we got: " +
                                                             response.StatusCode + " " + response.ReasonPhrase);
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Rename_a_FileDirectory
+        /// </summary>
+        public Boolean Rename(
+            string path,
+            string destination)
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.RENAME);
+            WebHDFSHttpQueryParameter.SetDestination(query, destination);
+
+            string requestPath = _baseAPI + path + '?' + query;
+
+            using (var handler = getHttpClientHandler(false))
+            {
+                using (var client = getHttpClient(handler))
+                {
+                    var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    response.EnsureSuccessStatusCode();
+                    var serializer = new DataContractJsonSerializer(typeof(Boolean));
+                    return ((Boolean)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result));
+                }
+            }
+        }
+
+        /// <summary>
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Delete_a_FileDirectory
+        /// </summary>
+        public Boolean Delete(
+            string path,
+            Nullable<bool> recursive = null)
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.DELETE);
+            WebHDFSHttpQueryParameter.SetRecursive(query, recursive);
+
+            string requestPath = _baseAPI + path + '?' + query;
+
+            using (var handler = getHttpClientHandler(false))
+            {
+                using (var client = getHttpClient(handler))
+                {
+                    var response = client.DeleteAsync(requestPath).Result;
+                    response.EnsureSuccessStatusCode();
+                    var serializer = new DataContractJsonSerializer(typeof(Boolean));
+                    return ((Boolean)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result));
+                }
+            }
+        }
+
+        /// <summary>
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Truncate_a_File
+        /// </summary>
+        public Boolean Truncate(
+            string path,
+            long newlength)
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.TRUNCATE);
+            WebHDFSHttpQueryParameter.SetNewLength(query, newlength);
+
+            string requestPath = _baseAPI + path + '?' + query;
+
+            using (var handler = getHttpClientHandler(false))
+            {
+                using (var client = getHttpClient(handler))
+                {
+                    var response = client.PostAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    response.EnsureSuccessStatusCode();
+                    var serializer = new DataContractJsonSerializer(typeof(Boolean));
+                    return ((Boolean)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result));
+                }
+            }
+        }
+
+        /// <summary>
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Concat_Files
+        /// </summary>
+        public bool Concat(
+            string path,
+            string sources)
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.CONCAT);
+            WebHDFSHttpQueryParameter.SetSources(query, sources);
+
+            string requestPath = _baseAPI + path + '?' + query;
+
+            using (var handler = getHttpClientHandler(false))
+            {
+                using (var client = getHttpClient(handler))
+                {
+                    var response = client.PostAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    return response.IsSuccessStatusCode;
+                }
+            }
+        }
+
+        /// <summary>
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Create_a_Symbolic_Link
+        /// </summary>
+        public bool CreateSymlink(
+            string path,
+            string destination,
+            Nullable<bool> createParent)
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.CREATESYMLINK);
+            WebHDFSHttpQueryParameter.SetDestination(query, destination);
+            WebHDFSHttpQueryParameter.SetCreateParent(query, createParent);
+
+            string requestPath = _baseAPI + path + '?' + query;
+
+            using (var handler = getHttpClientHandler(false))
+            {
+                using (var client = getHttpClient(handler))
+                {
+                    var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    return response.IsSuccessStatusCode;
+                }
+            }
+        }
+
+        /// <summary>
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Status_of_a_FileDirectory
+        /// </summary>
+        public string GetHomeDirectory()
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.GETHOMEDIRECTORY);
+
+            string requestPath = _baseAPI + '?' + query;
+
+            using (var handler = getHttpClientHandler(false))
+            {
+                using (var client = getHttpClient(handler))
+                {
+                    var response = client.GetAsync(requestPath).Result;
+                    response.EnsureSuccessStatusCode();
+                    var serializer = new DataContractJsonSerializer(typeof(PathClass));
+                    return ((PathClass)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result)).Path;
+                }
+            }
+        }
+
+        /// <summary>
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Set_Permission
+        /// </summary>
+        public bool SetPermission(
+            string path,
+            string permission = null)
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.SETPERMISSION);
+            WebHDFSHttpQueryParameter.SetPermission(query, permission);
+
+            string requestPath = _baseAPI + path + '?' + query;
+
+            using (var handler = getHttpClientHandler(false))
+            {
+                using (var client = getHttpClient(handler))
+                {
+                    var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    return response.IsSuccessStatusCode;
+                }
+            }
+        }
+
+        /// <summary>
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Set_Owner
+        /// </summary>
+        public bool SetOwner(
+            string path,
+            string owner = null,
+            string group = null)
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.SETOWNER);
+            WebHDFSHttpQueryParameter.SetOwner(query, owner);
+            WebHDFSHttpQueryParameter.SetGroup(query, group);
+
+            string requestPath = _baseAPI + path + '?' + query;
+
+            using (var handler = getHttpClientHandler(false))
+            {
+                using (var client = getHttpClient(handler))
+                {
+                    var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    return response.IsSuccessStatusCode;
+                }
+            }
+        }
+
+        /// <summary>
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Set_Replication_Factor
+        /// </summary>
+        public Boolean SetReplication(
+            string path,
+            Nullable<short> replication = null)
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.SETREPLICATION);
+            WebHDFSHttpQueryParameter.SetReplication(query, replication);
+
+            string requestPath = _baseAPI + path + '?' + query;
+
+            using (var handler = getHttpClientHandler(false))
+            {
+                using (var client = getHttpClient(handler))
+                {
+                    var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    response.EnsureSuccessStatusCode();
+                    var serializer = new DataContractJsonSerializer(typeof(Boolean));
+                    return ((Boolean)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result));
+                }
+            }
+        }
+
+        /// <summary>
+        /// https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Set_Replication_Factor
+        /// </summary>
+        public Boolean SetTimes(
+            string path,
+            Nullable<short> modificationtime = null,
+            Nullable<short> accesstime = null)
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.SETTIMES);
+            WebHDFSHttpQueryParameter.SetModificationTime(query, modificationtime);
+            WebHDFSHttpQueryParameter.SetAccessTime(query, accesstime);
+
+            string requestPath = _baseAPI + path + '?' + query;
+
+            using (var handler = getHttpClientHandler(false))
+            {
+                using (var client = getHttpClient(handler))
+                {
+                    var response = client.PutAsync(requestPath, new ByteArrayContent(new byte[] { })).Result;
+                    response.EnsureSuccessStatusCode();
+                    var serializer = new DataContractJsonSerializer(typeof(Boolean));
+                    return ((Boolean)serializer.ReadObject(response.Content.ReadAsStreamAsync().Result));
+                }
+            }
+        }
+
+        /// <summary>
+        /// https://hadoop.apache.org/docs/r2.7.3/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Check_access
+        /// </summary>
+        public bool CheckAccess(
+            string path,
+            string fsaction)
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            WebHDFSHttpQueryParameter.SetOp(query, WebHDFSHttpQueryParameter.Op.CHECKACCESS);
+            WebHDFSHttpQueryParameter.SetFSAction(query, fsaction);
+
+            string requestPath = _baseAPI + path + '?' + query;
+
+            using (var handler = getHttpClientHandler(false))
+            {
+                using (var client = getHttpClient(handler))
+                {
+                    var response = client.GetAsync(requestPath).Result;
+                    return response.IsSuccessStatusCode;
                 }
             }
         }
