@@ -1,11 +1,13 @@
 
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "knox-dotnet-dsl", "knox-dotnet-dsl\knox-dotnet-dsl.csproj", "{B06328D2-AE11-4F58-8129-06EC8116B11C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "webhdfs", "knox-dotnet-dsl\webhdfs.csproj", "{B06328D2-AE11-4F58-8129-06EC8116B11C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "knox-dotnet-dsl-test", "knox-dotnet-dsl-test\knox-dotnet-dsl-test.csproj", "{4596E349-3F9F-4CB4-B64B-ADD85C735FB2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "webhdfs-test", "knox-dotnet-dsl-test\webhdfs-test.csproj", "{4596E349-3F9F-4CB4-B64B-ADD85C735FB2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "webhdfs-console", "webhdfs-console\webhdfs-console.csproj", "{39AC3655-521A-4DAE-BF3D-7F9DD46B54E1}"
+EndProject
+Project("{5DD5E4FA-CB73-4610-85AB-557B54E96AA9}") = "webhdfs-nuget", "webhdfs\webhdfs-nuget.nuproj", "{C77D0F3B-9D9F-418D-B7F5-C9C8248DB1EC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,6 +27,10 @@ Global
 		{39AC3655-521A-4DAE-BF3D-7F9DD46B54E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39AC3655-521A-4DAE-BF3D-7F9DD46B54E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39AC3655-521A-4DAE-BF3D-7F9DD46B54E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C77D0F3B-9D9F-418D-B7F5-C9C8248DB1EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C77D0F3B-9D9F-418D-B7F5-C9C8248DB1EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C77D0F3B-9D9F-418D-B7F5-C9C8248DB1EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C77D0F3B-9D9F-418D-B7F5-C9C8248DB1EC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0
