@@ -13,6 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\knox-dotnet-dsl\knox-dotnet-dsl.csproj" />
+    <ProjectReference Include="..\webhdfs\webhdfs.csproj" />
   </ItemGroup>
 </Project>

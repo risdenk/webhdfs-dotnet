@@ -5,4 +5,7 @@
     <PackOnBuild>true</PackOnBuild>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="NuGet.Build.Packaging" Version="0.2.0" />
+  </ItemGroup>
 </Project>
