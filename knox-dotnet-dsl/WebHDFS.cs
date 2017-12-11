@@ -17,6 +17,7 @@ namespace knoxdotnetdsl
         }
 
         public NetworkCredential Credentials { get; set; }
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(5);
 
         HttpClientHandler getHttpClientHandler(bool AllowRedirect=true) {
             return new HttpClientHandler 
@@ -30,7 +31,7 @@ namespace knoxdotnetdsl
         HttpClient getHttpClient(HttpClientHandler handler) {
             return new HttpClient(handler)
             {
-                Timeout = TimeSpan.FromMinutes(15)
+                Timeout = Timeout
             };
         }
 

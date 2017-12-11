@@ -59,6 +59,7 @@ namespace webhdfs_console
         static void Main(string[] args)
         {
             string filename = ReadFilename();
+            string hdfsFilename = "/tmp/" + Path.GetFileName(filename) + ".dotnet";
 
             var webhdfs = new WebHDFS(ReadWebHDFSAPI())
             {
@@ -72,7 +73,7 @@ namespace webhdfs_console
 
             var result = webhdfs.UploadFile(
                 filename,
-                "/tmp/" + Path.GetFileName(filename) + ".dotnet",
+                hdfsFilename,
                 overwrite: true
             ).Result;
 
@@ -81,6 +82,8 @@ namespace webhdfs_console
 
             stopWatch.Stop();
             Console.WriteLine("Time Elapsed: " + stopWatch.Elapsed);
+
+            Console.WriteLine("File info: " + webhdfs.GetFileStatus(hdfsFilename).Result);
         }
     }
 }

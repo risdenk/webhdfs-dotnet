@@ -14,5 +14,10 @@ namespace knoxdotnetdsl
     public class FileStatuses
     {
         public List<FileStatus> FileStatus { get; set; }
+
+        public override string ToString()
+        {
+            return string.Join("\n", FileStatus);
+        }
     }
 }

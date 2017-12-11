@@ -21,5 +21,14 @@ namespace knoxdotnetdsl
         public string permission { get; set; }
         public int replication { get; set; }
         public string type { get; set; }
+
+        public override string ToString(){
+            return string.Format(
+                "accesstime={0};blockSize={1};group={2};length={3};modificationtime={4};owner={5};" +
+                "pathSuffix={6};permission={7};replication={8};type={9}",
+                new object[] { accessTime, blockSize, group, length, modificationTime, owner,
+                pathSuffix, permission, replication, type }
+            );
+        }  
     }
 }
