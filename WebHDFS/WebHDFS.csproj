@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackOnBuild>true</PackOnBuild>
-    <PackageId>WebHDFS.compuwizard123</PackageId>
+    <PackageId>WebHDFS.Client</PackageId>
     <PackageVersion>1.0.0</PackageVersion>
     <Authors>Kevin Risden</Authors>
     <Description>WebHDFS API</Description>
