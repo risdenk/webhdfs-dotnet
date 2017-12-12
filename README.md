@@ -1,1 +1,1 @@
-https://www.nuget.org/packages/WebHDFS.compuwizard123/
+https://www.nuget.org/packages/WebHDFS.Client/
