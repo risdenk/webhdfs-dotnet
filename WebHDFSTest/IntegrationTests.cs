@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using knoxdotnetdsl;
+using WebHDFS;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace knox_dotnet_dsl_test
+namespace WebHDFS.Test
 {
     public class IntegrationTests
     {
@@ -100,7 +100,7 @@ namespace knox_dotnet_dsl_test
         [Fact]
         public void TestWebHDFS()
         {
-            var webhdfs = new WebHDFS(
+            var webhdfs = new WebHDFSClient(
                 "http://localhost:3000"
             );
 
@@ -171,7 +171,7 @@ namespace knox_dotnet_dsl_test
         [Fact]
         public void TestWebHDFSAuth()
         {
-            var webhdfs = new WebHDFS("http://localhost:3000/auth") {
+            var webhdfs = new WebHDFSClient("http://localhost:3000/auth") {
                 Credentials = new NetworkCredential("admin", "admin")   
             };
 

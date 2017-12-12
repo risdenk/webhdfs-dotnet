@@ -6,13 +6,13 @@ using System.Runtime.Serialization.Json;
 using System.Threading.Tasks;
 using System.Web;
 
-namespace knoxdotnetdsl
+namespace WebHDFS
 {
-    public class WebHDFS
+    public class WebHDFSClient
     {
         readonly string _baseAPI;
 
-        public WebHDFS(string BaseAPI) {
+        public WebHDFSClient(string BaseAPI) {
             _baseAPI = BaseAPI;
         }
 

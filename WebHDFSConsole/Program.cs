@@ -3,9 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Security;
-using knoxdotnetdsl;
+using WebHDFS;
 
-namespace webhdfs_console
+namespace WebHDFSConsole
 {
     class Program
     {
@@ -61,7 +61,7 @@ namespace webhdfs_console
             string filename = ReadFilename();
             string hdfsFilename = "/tmp/" + Path.GetFileName(filename) + ".dotnet";
 
-            var webhdfs = new WebHDFS(ReadWebHDFSAPI())
+            var webhdfs = new WebHDFSClient(ReadWebHDFSAPI())
             {
                 Credentials = new NetworkCredential(ReadUsername(), ReadPassword())
             };

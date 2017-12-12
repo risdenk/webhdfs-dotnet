@@ -2,7 +2,7 @@
 using System.Collections.Specialized;
 using System.Text.RegularExpressions;
 
-namespace knoxdotnetdsl
+namespace WebHDFS
 {
     public static class WebHDFSHttpQueryParameter
     {

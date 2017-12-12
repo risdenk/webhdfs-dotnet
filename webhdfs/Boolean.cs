@@ -1,5 +1,5 @@
 ﻿using System;
-namespace knoxdotnetdsl
+namespace WebHDFS
 {
     public class Boolean
     {

@@ -1,9 +1,9 @@
 ﻿using Xunit;
 using System;
-using knoxdotnetdsl;
+using WebHDFS;
 using System.Collections.Specialized;
 
-namespace knox_dotnet_dsl_test
+namespace WebHDFS.Test
 {
     public class WebHDFSHttpQueryParameterTests
     {

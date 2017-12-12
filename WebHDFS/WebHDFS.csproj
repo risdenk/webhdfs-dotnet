@@ -7,10 +7,12 @@
     <PackageVersion>1.0.0</PackageVersion>
     <Authors>Kevin Risden</Authors>
     <Description>WebHDFS API</Description>
-    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageReleaseNotes>First release</PackageReleaseNotes>
     <Copyright>Copyright 2017 (c) Kevin Risden. All rights reserved.</Copyright>
     <PackageTags>webhdfs hdfs</PackageTags>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <PackageProjectUrl>https://github.com/risdenk/webhdfs-dotnet</PackageProjectUrl>
+    <Summary>WebHDFS Client for .Net</Summary>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
