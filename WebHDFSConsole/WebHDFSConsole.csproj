@@ -6,6 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\webhdfs\webhdfs.csproj" />
+    <ProjectReference Include="..\WebHDFS\WebHDFS.csproj" />
   </ItemGroup>
 </Project>
