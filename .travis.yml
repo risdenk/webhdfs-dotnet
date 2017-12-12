@@ -1,0 +1,7 @@
+language: csharp
+solution: webhdfs-dotnet.sln
+mono: none
+dotnet: 2.0.3
+script:
+  - dotnet build -c Release
+
