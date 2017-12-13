@@ -19,12 +19,11 @@ namespace WebHDFS
         public NetworkCredential Credentials { get; set; }
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(5);
 
-        public HttpClientHandler CustomHttpClientHandler { get; set; }
+        public HttpMessageHandler CustomHttpMessageHandler { get; set; }
 
-        HttpClientHandler getHttpClientHandler(bool AllowRedirect=true) {
-            if(CustomHttpClientHandler != null) {
-                CustomHttpClientHandler.AllowAutoRedirect = AllowRedirect;
-                return CustomHttpClientHandler;
+        HttpMessageHandler getHttpClientHandler(bool AllowRedirect=true) {
+            if(CustomHttpMessageHandler != null) {
+                return CustomHttpMessageHandler;
             }
             return new HttpClientHandler 
             {
@@ -34,7 +33,7 @@ namespace WebHDFS
             };
         }
 
-        HttpClient getHttpClient(HttpClientHandler handler) {
+        HttpClient getHttpClient(HttpMessageHandler handler) {
             return new HttpClient(handler)
             {
                 Timeout = Timeout
