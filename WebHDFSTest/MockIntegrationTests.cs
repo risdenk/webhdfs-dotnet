@@ -40,7 +40,7 @@ namespace WebHDFS.Test
             this.output = output;
             _server = new TestServer(new WebHostBuilder()
                                      .Configure(app => Configure(app))
-                                     .ConfigureServices(services => ConfigureServices(services)));
+                                     .ConfigureServices(services => services.AddRouting()));
             _client = _server.CreateClient();
             _webhdfs = new WebHDFSClient(_server.BaseAddress.AbsoluteUri)
             {
@@ -51,16 +51,16 @@ namespace WebHDFS.Test
         [Fact]
         public void TestWebHostAsync()
         {
-            var response = _client.GetAsync("/hello/kevin").Result;
+            var response = _client.GetAsync("/hello/webhdfs").Result;
             response.EnsureSuccessStatusCode();
             var data = response.Content.ReadAsStringAsync().Result;
-            Assert.Equal("Hi, kevin!", data);
+            Assert.Equal("Hi, webhdfs!", data);
         }
 
         [Fact]
         public void TestFileStatus() 
         {
-            var ActualFileStatus = _webhdfs.GetFileStatus("filestatus").Result;
+            var ActualFileStatus = _webhdfs.GetFileStatus("/FileStatus").Result;
             Assert.Equal(ExpectedFileStatus.accessTime, ActualFileStatus.accessTime);
             Assert.Equal(ExpectedFileStatus.blockSize, ActualFileStatus.blockSize);
             Assert.Equal(ExpectedFileStatus.group, ActualFileStatus.group);
@@ -80,31 +80,27 @@ namespace WebHDFS.Test
             routeBuilder.MapGet("hello/{name}", context =>
             {
                 var name = context.GetRouteValue("name");
-                // This is the route handler when HTTP GET "hello/<anything>"  matches
-                // To match HTTP GET "hello/<anything>/<anything>,
-                // use routeBuilder.MapGet("hello/{*name}"
                 return context.Response.WriteAsync($"Hi, {name}!");
             });
 
-            routeBuilder.MapGet("filestatus", (context) =>
+            routeBuilder.MapGet("FileStatus", (context) =>
             {
                 var fileStatusClass = new FileStatusClass()
                 {
                     FileStatus = ExpectedFileStatus
                 };
-                MemoryStream stream1 = new MemoryStream();
-                var ser = new DataContractJsonSerializer(typeof(FileStatusClass));
-                ser.WriteObject(stream1, fileStatusClass);
-                var jsonString = Encoding.ASCII.GetString(stream1.ToArray());
-                return context.Response.WriteAsync(jsonString);
+                return context.Response.WriteAsync(ObjectToJsonString(fileStatusClass));
             });
 
             app.UseRouter(routeBuilder.Build());
         }
 
-        void ConfigureServices(IServiceCollection services)
+        private static string ObjectToJsonString(Object obj)
         {
-            services.AddRouting();
+            MemoryStream memstream = new MemoryStream();
+            var ser = new DataContractJsonSerializer(obj.GetType());
+            ser.WriteObject(memstream, obj);
+            return Encoding.ASCII.GetString(memstream.ToArray());
         }
     }
 }

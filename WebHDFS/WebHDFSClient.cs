@@ -13,7 +13,7 @@ namespace WebHDFS
         readonly string _baseAPI;
 
         public WebHDFSClient(string BaseAPI) {
-            _baseAPI = BaseAPI;
+            _baseAPI = BaseAPI.TrimEnd('/');
         }
 
         public NetworkCredential Credentials { get; set; }
