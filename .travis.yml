@@ -3,6 +3,5 @@ solution: webhdfs-dotnet.sln
 mono: none
 dotnet: 2.0.3
 script:
-  - dotnet build
   - dotnet test
 
