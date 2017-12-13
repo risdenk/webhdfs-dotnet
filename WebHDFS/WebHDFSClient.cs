@@ -19,7 +19,13 @@ namespace WebHDFS
         public NetworkCredential Credentials { get; set; }
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(5);
 
+        public HttpClientHandler CustomHttpClientHandler { get; set; }
+
         HttpClientHandler getHttpClientHandler(bool AllowRedirect=true) {
+            if(CustomHttpClientHandler != null) {
+                CustomHttpClientHandler.AllowAutoRedirect = AllowRedirect;
+                return CustomHttpClientHandler;
+            }
             return new HttpClientHandler 
             {
                 AllowAutoRedirect = AllowRedirect,
