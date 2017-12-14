@@ -3,9 +3,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Security;
-using WebHDFS;
 
-namespace WebHDFSConsole
+namespace WebHDFS.Example
 {
     class Program
     {

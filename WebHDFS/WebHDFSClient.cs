@@ -8,18 +8,43 @@ using System.Web;
 
 namespace WebHDFS
 {
+    /// <summary>
+    /// Web HDFSC lient.
+    /// </summary>
     public class WebHDFSClient
     {
         readonly string _baseAPI;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:WebHDFS.WebHDFSClient"/> class.
+        /// </summary>
+        /// <param name="BaseAPI">Base API.</param>
         public WebHDFSClient(string BaseAPI) {
-            _baseAPI = BaseAPI;
+            _baseAPI = BaseAPI.TrimEnd('/');
         }
 
+        /// <summary>
+        /// Gets or sets the credentials.
+        /// </summary>
+        /// <value>The credentials.</value>
         public NetworkCredential Credentials { get; set; }
+
+        /// <summary>
+        /// Gets or sets the timeout.
+        /// </summary>
+        /// <value>The timeout.</value>
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(5);
 
-        HttpClientHandler getHttpClientHandler(bool AllowRedirect=true) {
+        /// <summary>
+        /// Gets or sets the custom http message handler.
+        /// </summary>
+        /// <value>The custom http message handler.</value>
+        public HttpMessageHandler CustomHttpMessageHandler { get; set; }
+
+        HttpMessageHandler getHttpClientHandler(bool AllowRedirect=true) {
+            if(CustomHttpMessageHandler != null) {
+                return CustomHttpMessageHandler;
+            }
             return new HttpClientHandler 
             {
                 AllowAutoRedirect = AllowRedirect,
@@ -28,7 +53,7 @@ namespace WebHDFS
             };
         }
 
-        HttpClient getHttpClient(HttpClientHandler handler) {
+        HttpClient getHttpClient(HttpMessageHandler handler) {
             return new HttpClient(handler)
             {
                 Timeout = Timeout

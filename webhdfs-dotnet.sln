@@ -5,7 +5,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebHDFS", "WebHDFS\WebHDFS.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebHDFSTest", "WebHDFSTest\WebHDFSTest.csproj", "{4596E349-3F9F-4CB4-B64B-ADD85C735FB2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebHDFSConsole", "WebHDFSConsole\WebHDFSConsole.csproj", "{39AC3655-521A-4DAE-BF3D-7F9DD46B54E1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebHDFSExample", "WebHDFSExample\WebHDFSExample.csproj", "{39AC3655-521A-4DAE-BF3D-7F9DD46B54E1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

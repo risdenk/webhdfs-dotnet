@@ -4,6 +4,9 @@ using System.Text.RegularExpressions;
 
 namespace WebHDFS
 {
+    /// <summary>
+    /// Web HDFSH ttp query parameter.
+    /// </summary>
     public static class WebHDFSHttpQueryParameter
     {
         // Check if octal pattern for permissions
@@ -12,8 +15,12 @@ namespace WebHDFS
         // Check if octal pattern for permissions
         static readonly string fsactionPattern = "^[r-][w-][x-]$";
 
+        /// <summary>
+        /// Op.
+        /// </summary>
         public sealed class Op
         {
+            #pragma warning disable 1591
             // GET
             public static readonly Op OPEN = new Op("OPEN");
             public static readonly Op GETFILESTATUS = new Op("GETFILESTATUS");
@@ -54,12 +61,17 @@ namespace WebHDFS
             // DELETE
             public static readonly Op DELETE = new Op("DELETE");
             public static readonly Op DELETESNAPSHOT = new Op("DELETESNAPSHOT");
+            #pragma warning restore 1591
 
             Op(string value)
             {
                 Value = value;
             }
 
+            /// <summary>
+            /// Gets the value.
+            /// </summary>
+            /// <value>The value.</value>
             public string Value { get; private set; }
         }
 
