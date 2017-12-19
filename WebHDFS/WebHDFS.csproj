@@ -1,18 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <PackOnBuild>true</PackOnBuild>
+    <TargetFrameworks>netstandard2.0;net452;net46;net461;net462;net47;net471</TargetFrameworks>
     <PackageId>WebHDFS.Client</PackageId>
-    <PackageVersion>1.0.0</PackageVersion>
+    <PackageVersion>1.1.0-beta</PackageVersion>
     <Authors>Kevin Risden</Authors>
     <Description>WebHDFS API</Description>
-    <PackageReleaseNotes>First release</PackageReleaseNotes>
+    <PackageReleaseNotes>Multi target release for .Net Standard 2.0 and .Net Frameworks 4.5.2, 4.6.0, 4.6.1, 4.6.2, 4.7.0, 4.7.1</PackageReleaseNotes>
     <Copyright>Copyright 2017 (c) Kevin Risden. All rights reserved.</Copyright>
     <PackageTags>webhdfs hdfs</PackageTags>
     <NeutralLanguage>en-US</NeutralLanguage>
     <PackageProjectUrl>https://github.com/risdenk/webhdfs-dotnet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/risdenk/webhdfs-dotnet</RepositoryUrl>
+    <RepositoryType>Github</RepositoryType>
     <Summary>WebHDFS Client for .Net</Summary>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -23,7 +25,40 @@
     <DebugType></DebugType>
     <DocumentationFile>bin\Release\netstandard2.0\webhdfs.xml</DocumentationFile>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="NuGet.Build.Packaging" Version="0.2.0" />
+
+  <!-- .NET 4.5 references, compilation flags and build options -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net452' ">
+    <Reference Include="System.Net.Http.dll" />
+    <Reference Include="System.Web" />
+  </ItemGroup>
+
+  <!-- .NET 4.6 references, compilation flags and build options -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
+    <Reference Include="System.Net.Http.dll" />
+    <Reference Include="System.Web" />
+  </ItemGroup>
+
+  <!-- .NET 4.6.1 references, compilation flags and build options -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
+    <Reference Include="System.Net.Http.dll" />
+    <Reference Include="System.Web" />
+  </ItemGroup>
+
+  <!-- .NET 4.6.2 references, compilation flags and build options -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
+    <Reference Include="System.Net.Http.dll" />
+    <Reference Include="System.Web" />
+  </ItemGroup>
+
+  <!-- .NET 4.7.0 references, compilation flags and build options -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net47' ">
+    <Reference Include="System.Net.Http.dll" />
+    <Reference Include="System.Web" />
+  </ItemGroup>
+
+  <!-- .NET 4.7.1 references, compilation flags and build options -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net471' ">
+    <Reference Include="System.Net.Http.dll" />
+    <Reference Include="System.Web" />
   </ItemGroup>
 </Project>
