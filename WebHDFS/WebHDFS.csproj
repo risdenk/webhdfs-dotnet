@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net452;net46;net461;net462;net47;net471</TargetFrameworks>
     <PackageId>WebHDFS.Client</PackageId>
-    <PackageVersion>1.1.0-beta</PackageVersion>
+    <PackageVersion>1.1.0</PackageVersion>
     <Authors>Kevin Risden</Authors>
     <Description>WebHDFS API</Description>
     <PackageReleaseNotes>Multi target release for .Net Standard 2.0 and .Net Frameworks 4.5.2, 4.6.0, 4.6.1, 4.6.2, 4.7.0, 4.7.1</PackageReleaseNotes>
