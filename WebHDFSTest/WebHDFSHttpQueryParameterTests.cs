@@ -1,6 +1,5 @@
 ﻿using Xunit;
 using System;
-using WebHDFS;
 using System.Collections.Specialized;
 
 namespace WebHDFS.Test
