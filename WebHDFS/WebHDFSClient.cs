@@ -9,54 +9,42 @@ using System.Web;
 namespace WebHDFS
 {
     /// <summary>
-    /// Web HDFSC lient.
+    /// WebHDFS Client.
     /// </summary>
-    public class WebHDFSClient
+    public class WebHDFSClient : IDisposable
     {
         readonly string _baseAPI;
+        readonly HttpClient _httpClient;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="T:WebHDFS.WebHDFSClient"/> class.
         /// </summary>
         /// <param name="BaseAPI">Base API.</param>
-        public WebHDFSClient(string BaseAPI) {
+        /// <param name="Credentials">Optional credentials.</param>
+        /// <param name="Timeout">Optional timeout.</param>
+        /// <param name="CustomHttpMessageHandler">Optional HttpMessageHandler.</param>
+        public WebHDFSClient(string BaseAPI, NetworkCredential Credentials = null, TimeSpan? Timeout = null, HttpMessageHandler CustomHttpMessageHandler = null)
+        {
             _baseAPI = BaseAPI.TrimEnd('/');
-        }
 
-        /// <summary>
-        /// Gets or sets the credentials.
-        /// </summary>
-        /// <value>The credentials.</value>
-        public NetworkCredential Credentials { get; set; }
-
-        /// <summary>
-        /// Gets or sets the timeout.
-        /// </summary>
-        /// <value>The timeout.</value>
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(5);
-
-        /// <summary>
-        /// Gets or sets the custom http message handler.
-        /// </summary>
-        /// <value>The custom http message handler.</value>
-        public HttpMessageHandler CustomHttpMessageHandler { get; set; }
-
-        HttpMessageHandler getHttpClientHandler(bool AllowRedirect=true) {
-            if(CustomHttpMessageHandler != null) {
-                return CustomHttpMessageHandler;
+            HttpMessageHandler httpMessageHandler;
+            if (CustomHttpMessageHandler != null)
+            {
+                httpMessageHandler = CustomHttpMessageHandler;
             }
-            return new HttpClientHandler 
+            else
             {
-                AllowAutoRedirect = AllowRedirect,
-                Credentials = Credentials,
-                PreAuthenticate = true
-            };
-        }
+                httpMessageHandler = new HttpClientHandler
+                {
+                    AllowAutoRedirect = false,
+                    Credentials = Credentials,
+                    PreAuthenticate = true
+                };
+            }
 
-        HttpClient getHttpClient(HttpMessageHandler handler) {
-            return new HttpClient(handler)
+            _httpClient = new HttpClient(httpMessageHandler)
             {
-                Timeout = Timeout
+                Timeout = Timeout.GetValueOrDefault(TimeSpan.FromMinutes(5))
             };
         }
 
@@ -101,20 +89,15 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
+            var response = await _httpClient.PutAsync(requestPath, new ByteArrayContent(new byte[] {}));
+            if(response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
             {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] {}));
-                    if(response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
-                    {
-                        var response2 = await client.PutAsync(response.Headers.Location, new StreamContent(stream));
-                        return response2.IsSuccessStatusCode;
-                    }
-                    throw new InvalidOperationException("Should get a 307. Instead we got: " + 
-                                                        response.StatusCode + " " + response.ReasonPhrase);
-                }
+                var response2 = await _httpClient.PutAsync(response.Headers.Location, new StreamContent(stream));
+                response2.EnsureSuccessStatusCode();
+                return response2.IsSuccessStatusCode;
             }
+            throw new InvalidOperationException("Should get a 307. Instead we got: " + 
+                                                response.StatusCode + " " + response.ReasonPhrase);
         }
 
         /// <summary>
@@ -146,20 +129,15 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
+            var response = await _httpClient.PostAsync(requestPath, new ByteArrayContent(new byte[] { }));
+            if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
             {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.PostAsync(requestPath, new ByteArrayContent(new byte[] { }));
-                    if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
-                    {
-                        var response2 = await client.PostAsync(response.Headers.Location, new StreamContent(stream));
-                        return response2.IsSuccessStatusCode;
-                    }
-                    throw new InvalidOperationException("Should get a 307. Instead we got: " +
-                                                        response.StatusCode + " " + response.ReasonPhrase);
-                }
+                var response2 = await _httpClient.PostAsync(response.Headers.Location, new StreamContent(stream));
+                response2.EnsureSuccessStatusCode();
+                return response2.IsSuccessStatusCode;
             }
+            throw new InvalidOperationException("Should get a 307. Instead we got: " +
+                                                response.StatusCode + " " + response.ReasonPhrase);
         }
 
         /// <summary>
@@ -203,25 +181,19 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
+            var response = await _httpClient.GetAsync(requestPath);
+            if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
             {
-                using (var client = getHttpClient(handler))
+                var response2 = await _httpClient.GetAsync(response.Headers.Location);
+                response2.EnsureSuccessStatusCode();
+                if (response2.IsSuccessStatusCode)
                 {
-                    var response = await client.GetAsync(requestPath);
-                    if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
-                    {
-                        var response2 = await client.GetAsync(response.Headers.Location);
-                        if (response2.IsSuccessStatusCode)
-                        {
-                            await response2.Content.CopyToAsync(stream);
-                            return true;
-                        }
-                        return false;
-                    }
-                    throw new InvalidOperationException("Should get a 307. Instead we got: " +
-                                                        response.StatusCode + " " + response.ReasonPhrase);
+                    await response2.Content.CopyToAsync(stream);
                 }
+                return response2.IsSuccessStatusCode;
             }
+            throw new InvalidOperationException("Should get a 307. Instead we got: " +
+                                                response.StatusCode + " " + response.ReasonPhrase);
         }
 
         /// <summary>
@@ -237,16 +209,10 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
-            {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
-                    response.EnsureSuccessStatusCode();
-                    var serializer = new DataContractJsonSerializer(typeof(Boolean));
-                    return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
-                }
-            }
+            var response = await _httpClient.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
+            response.EnsureSuccessStatusCode();
+            var serializer = new DataContractJsonSerializer(typeof(Boolean));
+            return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
         }
 
         /// <summary>
@@ -260,16 +226,10 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
-            {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.GetAsync(requestPath);
-                    response.EnsureSuccessStatusCode();
-                    var serializer = new DataContractJsonSerializer(typeof(FileStatusClass));
-                    return ((FileStatusClass)serializer.ReadObject(await response.Content.ReadAsStreamAsync())).FileStatus;
-                }
-            }
+            var response = await _httpClient.GetAsync(requestPath);
+            response.EnsureSuccessStatusCode();
+            var serializer = new DataContractJsonSerializer(typeof(FileStatusClass));
+            return ((FileStatusClass)serializer.ReadObject(await response.Content.ReadAsStreamAsync())).FileStatus;
         }
 
         /// <summary>
@@ -283,16 +243,10 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
-            {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.GetAsync(requestPath);
-                    response.EnsureSuccessStatusCode();
-                    var serializer = new DataContractJsonSerializer(typeof(FileStatusesClass));
-                    return ((FileStatusesClass)serializer.ReadObject(await response.Content.ReadAsStreamAsync())).FileStatuses;
-                }
-            }
+            var response = await _httpClient.GetAsync(requestPath);
+            response.EnsureSuccessStatusCode();
+            var serializer = new DataContractJsonSerializer(typeof(FileStatusesClass));
+            return ((FileStatusesClass)serializer.ReadObject(await response.Content.ReadAsStreamAsync())).FileStatuses;
         }
 
         /// <summary>
@@ -306,16 +260,10 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
-            {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.GetAsync(requestPath);
-                    response.EnsureSuccessStatusCode();
-                    var serializer = new DataContractJsonSerializer(typeof(ContentSummaryClass));
-                    return ((ContentSummaryClass)serializer.ReadObject(await response.Content.ReadAsStreamAsync())).ContentSummary;
-                }
-            }
+            var response = await _httpClient.GetAsync(requestPath);
+            response.EnsureSuccessStatusCode();
+            var serializer = new DataContractJsonSerializer(typeof(ContentSummaryClass));
+            return ((ContentSummaryClass)serializer.ReadObject(await response.Content.ReadAsStreamAsync())).ContentSummary;
         }
 
         /// <summary>
@@ -329,22 +277,16 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
+            var response = await _httpClient.GetAsync(requestPath);
+            if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
             {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.GetAsync(requestPath);
-                    if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
-                    {
-                        var response2 = await client.GetAsync(response.Headers.Location);
-                        response2.EnsureSuccessStatusCode();
-                        var serializer = new DataContractJsonSerializer(typeof(FileChecksumClass));
-                        return ((FileChecksumClass)serializer.ReadObject(await response2.Content.ReadAsStreamAsync())).FileChecksum;
-                    }
-                    throw new InvalidOperationException("Should get a 307. Instead we got: " +
-                                                        response.StatusCode + " " + response.ReasonPhrase);
-                }
+                var response2 = await _httpClient.GetAsync(response.Headers.Location);
+                response2.EnsureSuccessStatusCode();
+                var serializer = new DataContractJsonSerializer(typeof(FileChecksumClass));
+                return ((FileChecksumClass)serializer.ReadObject(await response2.Content.ReadAsStreamAsync())).FileChecksum;
             }
+            throw new InvalidOperationException("Should get a 307. Instead we got: " +
+                                                response.StatusCode + " " + response.ReasonPhrase);
         }
 
         /// <summary>
@@ -360,16 +302,10 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
-            {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
-                    response.EnsureSuccessStatusCode();
-                    var serializer = new DataContractJsonSerializer(typeof(Boolean));
-                    return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
-                }
-            }
+            var response = await _httpClient.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
+            response.EnsureSuccessStatusCode();
+            var serializer = new DataContractJsonSerializer(typeof(Boolean));
+            return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
         }
 
         /// <summary>
@@ -385,16 +321,10 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
-            {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.DeleteAsync(requestPath);
-                    response.EnsureSuccessStatusCode();
-                    var serializer = new DataContractJsonSerializer(typeof(Boolean));
-                    return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
-                }
-            }
+            var response = await _httpClient.DeleteAsync(requestPath);
+            response.EnsureSuccessStatusCode();
+            var serializer = new DataContractJsonSerializer(typeof(Boolean));
+            return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
         }
 
         /// <summary>
@@ -410,16 +340,10 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
-            {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.PostAsync(requestPath, new ByteArrayContent(new byte[] { }));
-                    response.EnsureSuccessStatusCode();
-                    var serializer = new DataContractJsonSerializer(typeof(Boolean));
-                    return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
-                }
-            }
+            var response = await _httpClient.PostAsync(requestPath, new ByteArrayContent(new byte[] { }));
+            response.EnsureSuccessStatusCode();
+            var serializer = new DataContractJsonSerializer(typeof(Boolean));
+            return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
         }
 
         /// <summary>
@@ -435,14 +359,9 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
-            {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.PostAsync(requestPath, new ByteArrayContent(new byte[] { }));
-                    return response.IsSuccessStatusCode;
-                }
-            }
+            var response = await _httpClient.PostAsync(requestPath, new ByteArrayContent(new byte[] { }));
+            response.EnsureSuccessStatusCode();
+            return response.IsSuccessStatusCode;
         }
 
         /// <summary>
@@ -460,14 +379,9 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
-            {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
-                    return response.IsSuccessStatusCode;
-                }
-            }
+            var response = await _httpClient.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
+            response.EnsureSuccessStatusCode();
+            return response.IsSuccessStatusCode;
         }
 
         /// <summary>
@@ -480,16 +394,10 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
-            {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.GetAsync(requestPath);
-                    response.EnsureSuccessStatusCode();
-                    var serializer = new DataContractJsonSerializer(typeof(PathClass));
-                    return ((PathClass)serializer.ReadObject(await response.Content.ReadAsStreamAsync())).Path;
-                }
-            }
+            var response = await _httpClient.GetAsync(requestPath);
+            response.EnsureSuccessStatusCode();
+            var serializer = new DataContractJsonSerializer(typeof(PathClass));
+            return ((PathClass)serializer.ReadObject(await response.Content.ReadAsStreamAsync())).Path;
         }
 
         /// <summary>
@@ -505,14 +413,9 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
-            {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
-                    return response.IsSuccessStatusCode;
-                }
-            }
+            var response = await _httpClient.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
+            response.EnsureSuccessStatusCode();
+            return response.IsSuccessStatusCode;
         }
 
         /// <summary>
@@ -530,14 +433,9 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
-            {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
-                    return response.IsSuccessStatusCode;
-                }
-            }
+            var response = await _httpClient.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
+            response.EnsureSuccessStatusCode();
+            return response.IsSuccessStatusCode;
         }
 
         /// <summary>
@@ -553,16 +451,10 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
-            {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
-                    response.EnsureSuccessStatusCode();
-                    var serializer = new DataContractJsonSerializer(typeof(Boolean));
-                    return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
-                }
-            }
+            var response = await _httpClient.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
+            response.EnsureSuccessStatusCode();
+            var serializer = new DataContractJsonSerializer(typeof(Boolean));
+            return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
         }
 
         /// <summary>
@@ -580,16 +472,10 @@ namespace WebHDFS
 
             string requestPath = _baseAPI + path + '?' + query;
 
-            using (var handler = getHttpClientHandler(false))
-            {
-                using (var client = getHttpClient(handler))
-                {
-                    var response = await client.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
-                    response.EnsureSuccessStatusCode();
-                    var serializer = new DataContractJsonSerializer(typeof(Boolean));
-                    return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
-                }
-            }
+            var response = await _httpClient.PutAsync(requestPath, new ByteArrayContent(new byte[] { }));
+            response.EnsureSuccessStatusCode();
+            var serializer = new DataContractJsonSerializer(typeof(Boolean));
+            return ((Boolean)serializer.ReadObject(await response.Content.ReadAsStreamAsync()));
         }
 
         /// <summary>
@@ -604,15 +490,50 @@ namespace WebHDFS
             WebHDFSHttpQueryParameter.SetFSAction(query, fsaction);
 
             string requestPath = _baseAPI + path + '?' + query;
+            var response = await _httpClient.GetAsync(requestPath);
+            response.EnsureSuccessStatusCode();
+            return response.IsSuccessStatusCode;
+        }
 
-            using (var handler = getHttpClientHandler(false))
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        /// <summary>
+        /// This code added to correctly implement the disposable pattern.
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
             {
-                using (var client = getHttpClient(handler))
+                if (disposing)
                 {
-                    var response = await client.GetAsync(requestPath);
-                    return response.IsSuccessStatusCode;
+                    if(_httpClient != null)
+                    {
+                        _httpClient.Dispose();
+                    }
                 }
+
+                disposedValue = true;
             }
         }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // ~WebHDFSClient() {
+        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        //   Dispose(false);
+        // }
+
+        /// <summary>
+        /// This code added to correctly implement the disposable pattern.
+        /// </summary>
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
+        }
+        #endregion
     }
 }

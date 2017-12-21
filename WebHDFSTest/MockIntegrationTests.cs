@@ -124,12 +124,11 @@ namespace WebHDFS.Test
             var authenticationHeaderValue = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(
                 Encoding.UTF8.GetBytes(string.Format("{0}:{1}", username, password))));
 
-            _webhdfs = new WebHDFSClient(_server.BaseAddress.AbsoluteUri)
-            {
-                CustomHttpMessageHandler = new AuthenticatedHttpMessageHandler(
-                    authenticationHeaderValue,
-                    _server.CreateHandler())
-            };
+            var customHttpMessageHandler = new AuthenticatedHttpMessageHandler(authenticationHeaderValue, 
+                _server.CreateHandler());
+
+            _webhdfs = new WebHDFSClient(_server.BaseAddress.AbsoluteUri, 
+                CustomHttpMessageHandler: customHttpMessageHandler);
         }
 
         [Fact]

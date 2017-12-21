@@ -60,10 +60,8 @@ namespace WebHDFS.Example
             string filename = ReadFilename();
             string hdfsFilename = "/tmp/" + Path.GetFileName(filename) + ".dotnet";
 
-            var webhdfs = new WebHDFSClient(ReadWebHDFSAPI())
-            {
-                Credentials = new NetworkCredential(ReadUsername(), ReadPassword())
-            };
+            var webhdfs = new WebHDFSClient(ReadWebHDFSAPI(), 
+                new NetworkCredential(ReadUsername(), ReadPassword()));
 
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
