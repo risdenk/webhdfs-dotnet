@@ -14,4 +14,7 @@ build:
   verbosity: minimal
 install:
 - cmd: "type c:\\windows\\system32\\drivers\\etc\\hosts\n\nping api.nuget.org\ndotnet restore"
+nuget:
+  account_feed: true
+  project_feed: true
 
