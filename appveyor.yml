@@ -1,0 +1,17 @@
+version: 1.0.{build}
+dotnet_csproj:
+  patch: true
+  file: '**\*.csproj'
+  version: '{version}'
+  package_version: '{version}'
+  assembly_version: '{version}'
+  file_version: '{version}'
+  informational_version: '{version}'
+image:
+- Visual Studio 2017
+build:
+  publish_nuget: true
+  verbosity: minimal
+install:
+- cmd: "type c:\\windows\\system32\\drivers\\etc\\hosts\n\nping api.nuget.org\ndotnet restore"
+
