@@ -4,4 +4,6 @@ mono: none
 dotnet: 2.1.3
 script:
   - dotnet test ./WebHDFSTest
+after_success:
+  - bash <(curl -s https://copilot.blackducksoftware.com/ci/travis/scripts/upload)
 
