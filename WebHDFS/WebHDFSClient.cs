@@ -156,10 +156,7 @@ namespace WebHDFS
                 throw new InvalidOperationException(string.Format("File {0} already exists.", pathname));
             }
 
-            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
-            {
-                return await ReadStream(fileStream, path, offset, length, buffersize);
-            }
+            return await ReadStream(filePath, path, offset, length, buffersize);
         }
 
         /// <summary>
@@ -167,7 +164,7 @@ namespace WebHDFS
         /// Note: You are responsible for closing the stream you send in.
         /// </summary>
         public async Task<bool> ReadStream(
-            Stream stream,
+            string filePath,
             string path,
             long? offset = null,
             long? length = null,
@@ -184,12 +181,13 @@ namespace WebHDFS
             var response = await _httpClient.GetAsync(requestPath);
             if (response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
             {
-                var response2 = await _httpClient.GetAsync(response.Headers.Location);
-                response2.EnsureSuccessStatusCode();
-                if (response2.IsSuccessStatusCode)
+                var response2 = await _httpClient.GetAsync(response.Headers.Location, HttpCompletionOption.ResponseHeadersRead);
+                using (var streamToRead = await response2.Content.ReadAsStreamAsync())
+                using (Stream streamToWriteTo = File.Open(filePath, FileMode.Create))
                 {
-                    await response2.Content.CopyToAsync(stream);
+                    await streamToRead.CopyToAsync(streamToWriteTo);
                 }
+                response2.EnsureSuccessStatusCode();
                 return response2.IsSuccessStatusCode;
             }
             throw new InvalidOperationException("Should get a 307. Instead we got: " +
