@@ -23,7 +23,8 @@ namespace WebHDFS
         /// <param name="Credentials">Optional credentials.</param>
         /// <param name="Timeout">Optional timeout.</param>
         /// <param name="CustomHttpMessageHandler">Optional HttpMessageHandler.</param>
-        public WebHDFSClient(string BaseAPI, NetworkCredential Credentials = null, TimeSpan? Timeout = null, HttpMessageHandler CustomHttpMessageHandler = null)
+        /// <param name="ExpectContinue">Expect server will return continue (100) before success</param>
+        public WebHDFSClient(string BaseAPI, NetworkCredential Credentials = null, TimeSpan? Timeout = null, HttpMessageHandler CustomHttpMessageHandler = null, bool? ExpectContinue = null)
         {
             _baseAPI = BaseAPI.TrimEnd('/');
 
@@ -39,6 +40,7 @@ namespace WebHDFS
                     AllowAutoRedirect = false,
                     Credentials = Credentials,
                     PreAuthenticate = true
+                    
                 };
             }
 
@@ -46,6 +48,7 @@ namespace WebHDFS
             {
                 Timeout = Timeout.GetValueOrDefault(TimeSpan.FromMinutes(5))
             };
+            _httpClient.DefaultRequestHeaders.ExpectContinue = ExpectContinue.GetValueOrDefault();
         }
 
         /// <summary>
@@ -88,12 +91,22 @@ namespace WebHDFS
             WebHDFSHttpQueryParameter.SetBuffersize(query, buffersize);
 
             string requestPath = _baseAPI + path + '?' + query;
-
+            
             var response = await _httpClient.PutAsync(requestPath, new ByteArrayContent(new byte[] {}));
             if(response.StatusCode.Equals(HttpStatusCode.TemporaryRedirect))
             {
+                
                 var response2 = await _httpClient.PutAsync(response.Headers.Location, new StreamContent(stream));
-                response2.EnsureSuccessStatusCode();
+                try
+                {
+                    response2.EnsureSuccessStatusCode();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    throw;
+                }
+                
                 return response2.IsSuccessStatusCode;
             }
             throw new InvalidOperationException("Should get a 307. Instead we got: " + 
